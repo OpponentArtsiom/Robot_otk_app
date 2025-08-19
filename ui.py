@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QComboBox, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QPushButton, QPlainTextEdit, QMessageBox
+    QVBoxLayout, QPushButton, QPlainTextEdit, QMessageBox, QHBoxLayout
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextOption
