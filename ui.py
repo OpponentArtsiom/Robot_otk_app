@@ -26,6 +26,7 @@ class RobotTable(QWidget):
         self.save_button = QPushButton("💾 Сохранить изменения")
         self.export_button = QPushButton("📄 Экспорт в Excel")
         self.refresh_button = QPushButton("🔄 Обновить таблицу")  # Кнопка обновления
+        #############################################
 
         # 🔗 Привязка кнопок к методам
         self.add_button.clicked.connect(self.add_robot)
@@ -33,16 +34,23 @@ class RobotTable(QWidget):
         self.save_button.clicked.connect(self.save_changes)
         self.export_button.clicked.connect(self.export_to_excel)
         self.refresh_button.clicked.connect(self.load_data)
+        ##############################################
 
-        # 📐 Компоновка интерфейса
-        layout = QVBoxLayout()
-        layout.addWidget(self.table)
-        layout.addWidget(self.add_button)
-        layout.addWidget(self.delete_button)
-        layout.addWidget(self.save_button)
-        layout.addWidget(self.export_button)
-        layout.addWidget(self.refresh_button)
-        self.setLayout(layout)
+        # Расположение кнопок горизонтально
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.add_button)
+        button_layout.addWidget(self.delete_button)
+        button_layout.addWidget(self.save_button)
+        button_layout.addWidget(self.export_button)
+        button_layout.addWidget(self.refresh_button)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.table)
+        main_layout.addLayout(button_layout)
+
+        self.setLayout(main_layout)
+        ################################################
+
 
         # 🏷️ Заголовки таблицы и соответствующие поля в базе
         self.headers = [
