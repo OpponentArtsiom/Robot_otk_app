@@ -117,10 +117,23 @@ class RobotTable(QWidget):
         self.table.resizeRowsToContents()
         self.table.blockSignals(False)  # Включаем сигналы обратно
 
+
     # ➕ Добавление нового робота
     def add_robot(self):
-        add_robot()  # Добавление в БД
-        self.load_data()  # Перезагрузка таблицы
+        reply = QMessageBox.question(self, "Несохранённые данные",
+            "Вы хотите сохранить изменения перед добавлением нового робота?",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+
+        if reply == QMessageBox.Cancel:
+            return
+        elif reply == QMessageBox.Yes:
+            self.save_changes()
+        
+        #self.save_changes() # Автосохранение если надо
+        add_robot()
+        self.load_data()
+
+
 
     # 🗑️ Удаление выбранного робота
     def delete_robot(self):
