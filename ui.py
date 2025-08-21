@@ -108,6 +108,19 @@ class RobotTable(QWidget):
         combo.setCurrentText(str(value))
         return combo
 
+    def update_status_color(self, combo, status):
+        color_map = {
+            "Необходим ремонт": "#ffcccc",     # светло-красный
+            "Откалиброван": "#ccffcc",         # светло-зелёный
+            "Тестируется": "#ffffcc",          # светло-жёлтый
+            "Протестирован": "#ccffff",        # светло-голубой
+            "Упакован": "#e0e0e0",             # серый
+            "-": "#ffffff"                     # белый
+        }
+
+        color = color_map.get(status, "#ffffff")
+        combo.setStyleSheet(f"QComboBox {{ background-color: {color}; }}")
+
     def create_multiline_cell(self, value):
         editor = QPlainTextEdit()
         editor.setPlainText(str(value))
