@@ -112,7 +112,7 @@ class RobotTable(QWidget):
         combo.currentTextChanged.connect(lambda text: self.update_status_color(combo, text))
 
          # 🔧 Устанавливаем минимальную ширину по самому длинному статусу
-        max_width = max([combo.fontMetrics().width(s) for s in statuses]) + 30
+        max_width = max([combo.fontMetrics().width(s) for s in statuses]) + 40
         combo.setMinimumWidth(max_width)
 
         return combo
@@ -166,7 +166,7 @@ class RobotTable(QWidget):
 
         # После self.table.setRowCount(len(robots))
         status_column_index = self.db_fields.index("status")
-        self.table.setColumnWidth(status_column_index, 160)  # или max_width, если хочешь динамически
+        self.table.setColumnWidth(status_column_index, 170)  # или max_width, если хочешь динамически
 
 
     def add_robot(self):
