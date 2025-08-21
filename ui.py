@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QPlainTextEdit, QMessageBox, QHBoxLayout, QLineEdit, QLabel
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextOption
+from PyQt5.QtGui import QTextOption, QPalette, QColor
 from db import get_all_robots, update_robot, add_robot, delete_robot
 from openpyxl import Workbook
 
@@ -104,6 +104,7 @@ class RobotTable(QWidget):
 
     def create_status_cell(self, value):
         combo = NoScrollComboBox()
+        combo.setEditable(True)
         statuses = ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "-"]
         combo.addItems(statuses)
         combo.setCurrentText(str(value))
@@ -113,16 +114,18 @@ class RobotTable(QWidget):
 
     def update_status_color(self, combo, status):
         color_map = {
-            "Необходим ремонт": "#ffcccc",     # светло-красный
-            "Откалиброван": "#ccffcc",         # светло-зелёный
-            "Тестируется": "#ffffcc",          # светло-жёлтый
-            "Протестирован": "#ccffff",        # светло-голубой
-            "Упакован": "#e0e0e0",             # серый
-            "-": "#ffffff"                     # белый
+            "Необходим ремонт": QColor("#ffcccc"),     # светло-красный
+            "Откалиброван": QColor("#ccffcc"),         # светло-зелёный
+            "Тестируется": QColor("#ffffcc"),          # светло-жёлтый
+            "Протестирован": QColor("#ccffff"),        # светло-голубой
+            "Упакован": QColor("#e0e0e0"),             # серый
+            "-": QColor("#ffffff")                     # белый
         }
 
-        color = color_map.get(status, "#ffffff")
-        combo.setStyleSheet(f"QComboBox {{ background-color: {color}; }}")
+        color = color_map.get(status, QColor("#ffffff"))
+        palette = combo.palette()
+        palette.setColor(QPalette.Base, color)
+        combo.setPalette(palette)
 
     def create_multiline_cell(self, value):
         editor = QPlainTextEdit()
