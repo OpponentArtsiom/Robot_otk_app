@@ -104,8 +104,11 @@ class RobotTable(QWidget):
 
     def create_status_cell(self, value):
         combo = NoScrollComboBox()
-        combo.addItems(["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "-"])
+        statuses = ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "-"]
+        combo.addItems(statuses)
         combo.setCurrentText(str(value))
+        self.update_status_color(combo, value)
+        combo.currentTextChanged.connect(lambda text: self.update_status_color(combo, text))
         return combo
 
     def update_status_color(self, combo, status):
