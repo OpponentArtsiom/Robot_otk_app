@@ -1,11 +1,14 @@
+from add_robot_dialog import AddRobotDialog
+from db import add_robot_with_data
+
 from PyQt5.QtWidgets import (
-    QComboBox, QPlainTextEdit, QMessageBox
+    QComboBox, QPlainTextEdit, QMessageBox, QDialog
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextOption, QPalette, QColor
 from openpyxl import Workbook
 
-from db import get_all_robots, update_robot, add_robot, delete_robot
+from db import get_all_robots, update_robot, delete_robot
 
 
 class NoScrollComboBox(QComboBox):
@@ -115,17 +118,12 @@ class RobotLogic:
         self.ui.table.setColumnWidth(status_column_index, 170)
 
     def add_robot(self):
-        reply = QMessageBox.question(self.ui, "Несохранённые данные",
-            "Вы хотите сохранить изменения перед добавлением нового робота?",
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+        dialog = AddRobotDialog(self.ui)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+            add_robot_with_data(data)
+            self.load_data()
 
-        if reply == QMessageBox.Cancel:
-            return
-        elif reply == QMessageBox.Yes:
-            self.save_changes()
-
-        add_robot()
-        self.load_data()
 
     def delete_robot(self):
         selected = self.ui.table.currentRow()
