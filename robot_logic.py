@@ -23,14 +23,14 @@ class RobotLogic:
         self.headers = [
             "Модель", "Серийный № робота", "Серийный № контроллера",
             "Текущий статус", "Описание неисправности",
-            "Проблемный узел/модуль", "Причина поломки", "Проведенные работы",
-            "Планируемые работы", "Необходимые запчасти"
+            "Причина поломки", "Проведенные работы",
+            "Планируемые работы", "Необходимые запчасти","Примечания"
         ]
         self.db_fields = [
             "model", "robot_sn", "controller_sn",
             "status", "fault_description",
-            "fault_module", "fault_reason", "tasks_done",
-            "tasks_required", "required_parts"
+            "fault_reason", "tasks_done",
+            "tasks_required", "required_parts", "notes"
         ]
 
     def filter_table(self):

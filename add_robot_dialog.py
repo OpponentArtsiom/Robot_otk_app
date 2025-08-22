@@ -26,11 +26,11 @@ class AddRobotDialog(QDialog):
             ("controller_sn", "Серийный № контроллера"),
             ("status", "Статус", ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "-"]),
             ("fault_description", "Описание неисправности", "multiline"),
-            ("fault_module", "Проблемный узел/модуль"),
             ("fault_reason", "Причина поломки"),
             ("tasks_done", "Проведенные работы", "multiline"),
             ("tasks_required", "Планируемые работы", "multiline"),
             ("required_parts", "Необходимые запчасти", "multiline"),
+            ("notes", "Примечания", "multiline")
         ]
 
         for field_id, label_text, *extra in field_defs:
