@@ -5,7 +5,7 @@ DB_CONFIG = {
     "dbname": "robots_db",
     "user": "postgres",
     "password": "admin",
-    "host": "localhost",
+    "host": "192.168.0.236",
     "port": 5432
 }
 

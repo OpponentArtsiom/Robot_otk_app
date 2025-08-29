@@ -24,10 +24,11 @@ def show_error_dialog(error_message):
 def main():
     try:
         init_db()  # Инициализация БД
+        app = QApplication(sys.argv)
 
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-        app = QApplication(sys.argv)
+        
 
 
         window = RobotTable()
