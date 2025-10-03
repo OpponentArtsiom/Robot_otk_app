@@ -1,0 +1,51 @@
+# Байткод Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Виртуальные окружения
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+# Кэш и логи
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# Тесты и покрытия
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+htmlcov/
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Пакеты и сборка
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+pip-wheel-metadata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Секреты и конфиги
+*.env
+*.ini
+*.cfg
+*.local
+
