@@ -12,6 +12,9 @@ class RobotTable(QWidget):
         self.setWindowTitle("Учёт роботов ОТК")
         self.resize(1000, 400)
 
+        # 📊 Таблица
+        self.table = QTableWidget()
+
         # Инициализация логики
         self.logic = RobotLogic(self)
 
@@ -25,9 +28,6 @@ class RobotTable(QWidget):
         search_layout.addStretch()
         search_layout.addWidget(self.search_label)
         search_layout.addWidget(self.search_input)
-
-        # 📊 Таблица
-        self.table = QTableWidget()
 
         # 🔘 Кнопки
         self.add_button = QPushButton("➕ Добавить робота")
