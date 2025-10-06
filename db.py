@@ -20,11 +20,11 @@ def init_db():
             controller_sn TEXT,
             status TEXT,
             fault_description TEXT,
-            fault_module TEXT,
             fault_reason TEXT,
             tasks_done TEXT,
             tasks_required TEXT,
-            required_parts TEXT
+            required_parts TEXT,
+            notes TEXT
         )
     """)
     conn.commit()
@@ -42,8 +42,8 @@ def get_all_robots():
 def update_robot(robot_id, field_name, new_value):
     allowed_fields = {
         "model", "robot_sn", "controller_sn", "status",
-        "fault_description", "fault_module", "fault_reason",
-        "tasks_done", "tasks_required", "required_parts"
+        "fault_description", "fault_reason",
+        "tasks_done", "tasks_required", "required_parts", "notes"
     }
     if field_name not in allowed_fields:
         raise ValueError(f"Недопустимое поле: {field_name}")
@@ -55,19 +55,24 @@ def update_robot(robot_id, field_name, new_value):
     cursor.close()
     conn.close()
 
-def add_robot():
+def add_robot_with_data(data):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO robots (
-            model, robot_sn, controller_sn, status,
-            fault_description, fault_module, fault_reason,
-            tasks_done, tasks_required, required_parts
+            model, robot_sn, controller_sn, status, fault_description,
+            fault_reason, tasks_done, tasks_required, required_parts, notes
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, ("-", "", "", "-", "", "", "", "", "", ""))
+    """, (
+        data["model"], data["robot_sn"], data["controller_sn"], data["status"],
+        data["fault_description"], data["fault_reason"],
+        data["tasks_done"], data["tasks_required"], data["required_parts"], data["notes"]
+    ))
     conn.commit()
     cursor.close()
     conn.close()
+
+
 
 def delete_robot(robot_id):
     conn = psycopg2.connect(**DB_CONFIG)
