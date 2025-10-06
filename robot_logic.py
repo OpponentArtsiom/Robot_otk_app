@@ -64,9 +64,8 @@ class RobotLogic:
 
         status_column_index = self.db_fields.index("status")
 
-        self.ui.table.setColumnWidth(status_column_index, 170)
         # Блокируем визуально строки со статусом "Отгружен"
-        status_column_index = self.db_fields.index("status")
+        self.ui.table.setColumnWidth(status_column_index, 170)
         for row_idx, robot in enumerate(robots):
             # окрашивание уже сделано в create_table_item, здесь можно оставить фокус
             if robot.get("status") == "Отгружен":
