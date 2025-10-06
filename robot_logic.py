@@ -35,6 +35,7 @@ class RobotLogic:
                 "Тестируется": QColor("#ffffcc"),
                 "Протестирован": QColor("#ccffff"),
                 "Упакован": QColor("#e0e0e0"),
+                "Отгружен": QColor("#d0d0d0"),  # серый цвет для "Отгружен"
                 "-": QColor("#ffffff")
             }
             color = color_map.get(value, QColor("#ffffff"))
@@ -62,7 +63,17 @@ class RobotLogic:
         self.ui.table.blockSignals(False)
 
         status_column_index = self.db_fields.index("status")
+
         self.ui.table.setColumnWidth(status_column_index, 170)
+        # Блокируем визуально строки со статусом "Отгружен"
+        status_column_index = self.db_fields.index("status")
+        for row_idx, robot in enumerate(robots):
+            # окрашивание уже сделано в create_table_item, здесь можно оставить фокус
+            if robot.get("status") == "Отгружен":
+                for col_idx in range(self.ui.table.columnCount()):
+                    cell = self.ui.table.item(row_idx, col_idx)
+                    if cell:
+                        cell.setBackground(QColor(200, 200, 200))  # серый цвет
 
     def filter_table(self):
         query = self.ui.search_input.text().lower()
