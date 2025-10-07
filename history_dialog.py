@@ -1,6 +1,9 @@
+import json
+import os
 from PyQt5.QtWidgets import (
     QDialog, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView
+    QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView,
+    QInputDialog, QLineEdit, QMessageBox
 )
 from db import get_history, clear_history
 
@@ -18,6 +21,15 @@ FIELD_LABELS = {
 }
 
 
+def load_config():
+    config_path = os.path.join(os.path.dirname(__file__), "config.json")
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 class HistoryDialog(QDialog):
     def __init__(self, robot_id=None, parent=None):
         super().__init__(parent)
@@ -25,10 +37,10 @@ class HistoryDialog(QDialog):
         self.resize(1000, 500)
 
         self.robot_id = robot_id
+        self.config = load_config()
 
         # таблица
         self.table = QTableWidget()
-        # 🔑 растягиваем колонки на всю ширину окна
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # кнопка очистки
@@ -56,22 +68,44 @@ class HistoryDialog(QDialog):
         self.table.setRowCount(len(history))
 
         for row_idx, row in enumerate(history):
-            for col_idx, key in enumerate(["id", "robot_sn", "action", "field", "old_value", "new_value", "timestamp"]):
+            for col_idx, key in enumerate(
+                ["id", "robot_sn", "action", "field", "old_value", "new_value", "timestamp"]
+            ):
                 value = row.get(key, "")
                 if key == "field":
                     value = FIELD_LABELS.get(value, value)
                 elif key == "timestamp" and value:
-                    # форматируем datetime → строка "YYYY-MM-DD HH:MM"
                     try:
                         value = value.strftime("%Y-%m-%d %H:%M")
                     except Exception:
                         pass
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
 
-
-        # 🔑 если хочешь именно под содержимое, а не растягивание — раскомментируй:
-        #self.table.resizeColumnsToContents()
-
     def handle_clear(self):
-        clear_history()
-        self.load_history()
+        # Запрашиваем пароль
+        password, ok = QInputDialog.getText(
+            self, "Пароль", "Введите пароль для очистки истории:",
+            QLineEdit.Password
+        )
+        if not ok:
+            return
+
+        expected = self.config.get("history_clear_password")
+        if not expected:
+            QMessageBox.critical(self, "Ошибка", "Пароль не задан в config.json")
+            return
+
+        if password != expected:
+            QMessageBox.warning(self, "Ошибка", "Неверный пароль!")
+            return
+
+        # Если пароль верный — подтверждаем
+        reply = QMessageBox.question(
+            self, "Подтверждение",
+            "Вы уверены, что хотите очистить всю историю?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            clear_history()
+            self.load_history()
+            QMessageBox.information(self, "История", "🧹 История успешно очищена.")
