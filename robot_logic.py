@@ -113,6 +113,18 @@ class RobotLogic:
             QMessageBox.warning(self.ui, "Ошибка", "Выбранная строка вне диапазона")
             return
 
+        status_column_index = self.db_fields.index("status")
+
+        # Блокируем визуально строки со статусом "Отгружен"
+        self.ui.table.setColumnWidth(status_column_index, 170)
+        for row_idx, robot in enumerate(robots):
+            # окрашивание уже сделано в create_table_item, здесь можно оставить фокус
+            if robot.get("status") == "Отгружен":
+                for col_idx in range(self.ui.table.columnCount()):
+                    cell = self.ui.table.item(row_idx, col_idx)
+                    if cell:
+                        cell.setBackground(QColor(200, 200, 200))  # серый цвет
+
         robot = robots[selected_row]
         dialog = RobotDialog(robot_data=robot, parent=self.ui)
 
