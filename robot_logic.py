@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QDialog
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 from openpyxl import Workbook
 
@@ -24,6 +24,13 @@ class RobotLogic:
             "fault_reason", "tasks_done",
             "tasks_required", "required_parts", "notes"
         ]
+
+        self.start_auto_refresh()
+
+    def start_auto_refresh(self):
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.load_data)
+        self.timer.start(60000) # обновление раз в минуту
 
     def clear_history(self):
         """Очистка всей истории действий"""

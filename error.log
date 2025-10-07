@@ -219,3 +219,17 @@ AttributeError: 'RobotLogic' object has no attribute 'export_to_excel'
                                         ^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'RobotLogic' object has no attribute 'show_history'
 
+2025-10-07 13:32:29,467 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 34, in main
+    window = RobotTable()
+             ^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 19, in __init__
+    self.logic = RobotLogic(self)
+                 ^^^^^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/robot_logic.py", line 28, in __init__
+    self.start_auto_refresh()
+  File "/home/artsiom/MY/Robot_otk_app/robot_logic.py", line 31, in start_auto_refresh
+    self.timer = QTimer()
+                 ^^^^^^
+NameError: name 'QTimer' is not defined
+
