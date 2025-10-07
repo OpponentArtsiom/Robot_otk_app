@@ -192,3 +192,30 @@ psycopg2.OperationalError: connection to server at "192.168.0.236", port 5432 fa
 	Is the server running on that host and accepting TCP/IP connections?
 
 
+2025-10-07 09:47:09,041 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 34, in main
+    window = RobotTable()
+             ^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 25, in __init__
+    self.search_input.textChanged.connect(self.logic.filter_table)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RobotLogic' object has no attribute 'filter_table'
+
+2025-10-07 09:48:37,980 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 34, in main
+    window = RobotTable()
+             ^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 45, in __init__
+    self.export_button.clicked.connect(self.logic.export_to_excel)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RobotLogic' object has no attribute 'export_to_excel'
+
+2025-10-07 09:49:28,726 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 34, in main
+    window = RobotTable()
+             ^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 46, in __init__
+    self.history_button.clicked.connect(self.logic.show_history)  # открывает историю
+                                        ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RobotLogic' object has no attribute 'show_history'
+

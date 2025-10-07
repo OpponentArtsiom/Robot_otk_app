@@ -35,7 +35,7 @@ class RobotTable(QWidget):
         self.delete_button = QPushButton("🗑️ Удалить робота")
         self.save_button = QPushButton("💾 Сохранить изменения")
         self.export_button = QPushButton("📄 Экспорт в Excel")
-        self.refresh_button = QPushButton("🔄 Обновить таблицу")
+        self.history_button = QPushButton("📜 История")  # новая кнопка
 
         # 🔗 Связи
         self.add_button.clicked.connect(self.logic.add_robot)
@@ -43,7 +43,7 @@ class RobotTable(QWidget):
         self.delete_button.clicked.connect(self.logic.delete_robot)
         self.save_button.clicked.connect(self.logic.save_changes)
         self.export_button.clicked.connect(self.logic.export_to_excel)
-        self.refresh_button.clicked.connect(self.logic.load_data)
+        self.history_button.clicked.connect(self.logic.show_history)  # открывает историю
 
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.add_button)
@@ -51,7 +51,7 @@ class RobotTable(QWidget):
         button_layout.addWidget(self.delete_button)
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.export_button)
-        button_layout.addWidget(self.refresh_button)
+        button_layout.addWidget(self.history_button)
 
         # 📐 Layout
         main_layout = QVBoxLayout()
@@ -63,4 +63,3 @@ class RobotTable(QWidget):
 
         # ⏬ Загрузка данных
         self.logic.load_data()
-

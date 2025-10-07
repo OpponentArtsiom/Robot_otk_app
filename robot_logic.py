@@ -4,7 +4,8 @@ from PyQt5.QtGui import QColor
 from openpyxl import Workbook
 
 from robot_dialog import RobotDialog
-from db import get_all_robots, add_robot_with_data, update_robot, delete_robot
+from db import get_all_robots, add_robot_with_data, update_robot, delete_robot, log_action, clear_history
+from history_dialog import HistoryDialog
 
 
 class RobotLogic:
@@ -24,6 +25,25 @@ class RobotLogic:
             "tasks_required", "required_parts", "notes"
         ]
 
+    def clear_history(self):
+        """Очистка всей истории действий"""
+        reply = QMessageBox.question(
+            self.ui,
+            "Подтверждение",
+            "Вы уверены, что хотите очистить всю историю?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            clear_history()
+            QMessageBox.information(self.ui, "История", "🧹 История успешно очищена.")
+
+
+    def show_history(self):
+            """Открывает окно с историей действий"""
+            dialog = HistoryDialog(parent=self.ui)
+            dialog.exec_()
+
+
     def create_table_item(self, value, field=None):
         item = QTableWidgetItem(str(value))
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
@@ -35,7 +55,7 @@ class RobotLogic:
                 "Тестируется": QColor("#ffffcc"),
                 "Протестирован": QColor("#ccffff"),
                 "Упакован": QColor("#e0e0e0"),
-                "Отгружен": QColor("#d0d0d0"),  # серый цвет для "Отгружен"
+                "Отгружен": QColor("#d0d0d0"),
                 "-": QColor("#ffffff")
             }
             color = color_map.get(value, QColor("#ffffff"))
@@ -62,18 +82,6 @@ class RobotLogic:
         self.ui.table.resizeRowsToContents()
         self.ui.table.blockSignals(False)
 
-        status_column_index = self.db_fields.index("status")
-
-        # Блокируем визуально строки со статусом "Отгружен"
-        self.ui.table.setColumnWidth(status_column_index, 170)
-        for row_idx, robot in enumerate(robots):
-            # окрашивание уже сделано в create_table_item, здесь можно оставить фокус
-            if robot.get("status") == "Отгружен":
-                for col_idx in range(self.ui.table.columnCount()):
-                    cell = self.ui.table.item(row_idx, col_idx)
-                    if cell:
-                        cell.setBackground(QColor(200, 200, 200))  # серый цвет
-
     def filter_table(self):
         query = self.ui.search_input.text().lower()
         for row in range(self.ui.table.rowCount()):
@@ -85,11 +93,13 @@ class RobotLogic:
                     break
             self.ui.table.setRowHidden(row, not match)
 
+
     def add_robot(self):
         dialog = RobotDialog(parent=self.ui)
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_data()
-            add_robot_with_data(data)
+            robot_id = add_robot_with_data(data)
+            log_action(robot_id, "Добавлен робот")
             self.load_data()
 
     def edit_robot(self):
@@ -109,10 +119,19 @@ class RobotLogic:
         if dialog.exec_() == QDialog.Accepted:
             updated_data = dialog.get_data()
             robot_id = robot['id']
+
             for field, value in updated_data.items():
-                update_robot(robot_id, field, value)
+                old_value = robot.get(field)
+                if str(old_value or "") != str(value or ""):
+                    update_robot(robot_id, field, value)
+                    log_action(robot_id, "Изменение", field, old_value, value)
+
+            # 🔑 очистка и перерисовка таблицы
             self.load_data()
             QMessageBox.information(self.ui, "Готово", "✅ Робот обновлён.")
+
+
+
 
     def delete_robot(self):
         selected_row = self.ui.table.currentRow()
@@ -127,6 +146,7 @@ class RobotLogic:
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
             delete_robot(robot_id)
+            log_action(robot_id, "Удалён робот")
             self.load_data()
 
     def save_changes(self):
@@ -144,19 +164,24 @@ class RobotLogic:
                 item = self.ui.table.item(row, col)
                 if item:
                     value = item.text()
-                    update_robot(robot_id, field, value)
-
-        QMessageBox.information(self.ui, "Готово", "✅ Изменения сохранены.")
-        self.load_data()
 
     def export_to_excel(self):
+        from openpyxl import Workbook
+
         wb = Workbook()
         ws = wb.active
         ws.title = "Роботы ОТК"
+
+        # Заголовки
         ws.append(self.headers)
+
+        # Данные
         robots = get_all_robots()
         for robot in robots:
             row_data = [robot.get(field, "") for field in self.db_fields]
             ws.append(row_data)
+
+        # Сохраняем файл
         wb.save("robots_export.xlsx")
-        print("✅ Данные успешно экспортированы в robots_export.xlsx")
+        QMessageBox.information(self.ui, "Экспорт", "✅ Данные экспортированы в robots_export.xlsx")
+
