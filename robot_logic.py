@@ -51,12 +51,12 @@ class RobotLogic:
         if field == "status":
             color_map = {
                 "Необходим ремонт": QColor("#ffcccc"),
-                "Откалиброван": QColor("#ccffcc"),
+                "Откалиброван": QColor("#8FBC8F"),
                 "Тестируется": QColor("#ffffcc"),
                 "Протестирован": QColor("#ccffff"),
-                "Упакован": QColor("#e0e0e0"),
+                "Упакован": QColor("#87CEEB"),
                 "Отгружен": QColor("#d0d0d0"),
-                "-": QColor("#ffffff")
+                "Простаивает": QColor("#DCDCDC")
             }
             color = color_map.get(value, QColor("#ffffff"))
             item.setBackground(color)
@@ -81,6 +81,17 @@ class RobotLogic:
         self.ui.table.resizeColumnsToContents()
         self.ui.table.resizeRowsToContents()
         self.ui.table.blockSignals(False)
+        status_column_index = self.db_fields.index("status")
+
+        # Блокируем визуально строки со статусом "Отгружен"
+        self.ui.table.setColumnWidth(status_column_index, 170)
+        for row_idx, robot in enumerate(robots):
+            # окрашивание уже сделано в create_table_item, здесь можно оставить фокус
+            if robot.get("status") == "Отгружен":
+                for col_idx in range(self.ui.table.columnCount()):
+                    cell = self.ui.table.item(row_idx, col_idx)
+                    if cell:
+                        cell.setBackground(QColor(200, 200, 200))  # серый цвет
 
     def filter_table(self):
         query = self.ui.search_input.text().lower()
@@ -112,18 +123,6 @@ class RobotLogic:
         if selected_row >= len(robots):
             QMessageBox.warning(self.ui, "Ошибка", "Выбранная строка вне диапазона")
             return
-
-        status_column_index = self.db_fields.index("status")
-
-        # Блокируем визуально строки со статусом "Отгружен"
-        self.ui.table.setColumnWidth(status_column_index, 170)
-        for row_idx, robot in enumerate(robots):
-            # окрашивание уже сделано в create_table_item, здесь можно оставить фокус
-            if robot.get("status") == "Отгружен":
-                for col_idx in range(self.ui.table.columnCount()):
-                    cell = self.ui.table.item(row_idx, col_idx)
-                    if cell:
-                        cell.setBackground(QColor(200, 200, 200))  # серый цвет
 
         robot = robots[selected_row]
         dialog = RobotDialog(robot_data=robot, parent=self.ui)
