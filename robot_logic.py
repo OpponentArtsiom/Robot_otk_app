@@ -211,19 +211,108 @@ class RobotLogic:
         QMessageBox.information(self.ui, "Сохранено", "Изменения сохранены (если были).")
 
     def export_to_excel(self):
-        """Экспорт таблицы роботов в Excel-файл robots_export.xlsx."""
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Роботы ОТК"
-        ws.append(self.headers)
+        """Экспорт таблицы роботов в Excel с форматированием и выбором пути сохранения."""
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
+        from PyQt5.QtWidgets import QFileDialog, QMessageBox
+        from datetime import datetime
 
+        # Получаем данные
         robots = self.service.get_all_robots() or []
-        for robot in robots:
-            row_data = [robot.get(field, "") for field in self.db_fields]
-            ws.append(row_data)
+        if not robots:
+            QMessageBox.information(self.ui, "Экспорт", "⚠️ Нет данных для экспорта.")
+            return
+
+        # Диалог выбора пути сохранения
+        default_name = f"robots_ОТК_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.xlsx"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.ui,
+            "Сохранить как",
+            default_name,
+            "Excel Files (*.xlsx)"
+        )
+        if not file_path:
+            return  # пользователь отменил
 
         try:
-            wb.save("robots_export.xlsx")
-            QMessageBox.information(self.ui, "Экспорт", "✅ Данные экспортированы в robots_export.xlsx")
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Роботы ОТК"
+
+            # === Заголовки ===
+            ws.append(self.headers)
+
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill("solid", fgColor="4F81BD")
+            align_center = Alignment(horizontal="center", vertical="center")
+            thin_border = Border(
+                left=Side(style="thin"),
+                right=Side(style="thin"),
+                top=Side(style="thin"),
+                bottom=Side(style="thin")
+            )
+
+            for col_num, header in enumerate(self.headers, 1):
+                cell = ws.cell(row=1, column=col_num)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = align_center
+                cell.border = thin_border
+
+            # === Данные ===
+            status_colors = {
+                "Необходим ремонт": "FFFFC7CE",
+                "Откалиброван": "FFC6EFCE",
+                "Тестируется": "FFFFF2CC",
+                "Протестирован": "FFCCFFFF",
+                "Упакован": "FF87CEEB",
+                "Отгружен": "FFD9D9D9",
+                "Простаивает": "FFE7E6E6"
+            }
+
+            for row_idx, robot in enumerate(robots, start=2):
+                for col_idx, field in enumerate(self.db_fields, start=1):
+                    value = robot.get(field, "")
+                    cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                    cell.border = thin_border
+                    if field == "status":
+                        color = status_colors.get(value, "FFFFFFFF")
+                        cell.fill = PatternFill("solid", fgColor=color)
+
+            # === Автоширина ===
+            for col_cells in ws.columns:
+                col_cells = [c for c in col_cells if c.value is not None]
+                if not col_cells:
+                    continue
+                max_len = max(len(str(c.value)) for c in col_cells)
+                col_letter = get_column_letter(col_cells[0].column)
+                ws.column_dimensions[col_letter].width = max_len + 2
+
+            # === Заморозка и автофильтр ===
+            ws.freeze_panes = "A2"
+            ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
+
+            # === Добавляем дату экспорта ===
+            ws["A{}".format(ws.max_row + 2)] = f"Экспортировано: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+
+            # === Сохранение ===
+            wb.save(file_path)
+            wb.close()
+
+            QMessageBox.information(self.ui, "Экспорт", f"✅ Данные успешно экспортированы в:\n{file_path}")
+
+        except PermissionError:
+            QMessageBox.warning(
+                self.ui,
+                "Ошибка доступа",
+                "⚠️ Невозможно сохранить файл — возможно, он уже открыт в Excel.\n"
+                "Закройте файл и попробуйте снова."
+            )
         except Exception as e:
-            QMessageBox.critical(self.ui, "Ошибка экспорта", f"Не удалось сохранить файл: {e}")
+            QMessageBox.critical(
+                self.ui,
+                "Ошибка экспорта",
+                f"❌ Не удалось сохранить файл:\n{e}"
+            )
+
