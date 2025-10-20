@@ -233,3 +233,64 @@ AttributeError: 'RobotLogic' object has no attribute 'show_history'
                  ^^^^^^
 NameError: name 'QTimer' is not defined
 
+2025-10-14 15:32:34,008 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 26, in main
+    init_db()  # Инициализация БД
+    ^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/db.py", line 13, in init_db
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/venv/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "192.168.91.66", port 5432 failed: Connection timed out
+	Is the server running on that host and accepting TCP/IP connections?
+
+
+2025-10-15 08:50:42,460 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 26, in main
+    init_db()  # Инициализация БД
+    ^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/db.py", line 13, in init_db
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/venv/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "192.168.91.66", port 5432 failed: Connection timed out
+	Is the server running on that host and accepting TCP/IP connections?
+
+
+2025-10-20 10:17:42,036 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 48, in main
+    window = RobotTable(service=service)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 61, in __init__
+    self.set_logic(RobotLogic(self, service))
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 77, in set_logic
+    self.clear_history_button.clicked.connect(self.logic.clear_history)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RobotLogic' object has no attribute 'clear_history'
+
+2025-10-20 10:25:11,814 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 48, in main
+    window = RobotTable(service=service)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 61, in __init__
+    self.set_logic(RobotLogic(self, service))
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 77, in set_logic
+    self.clear_history_button.clicked.connect(self.logic.clear_history)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RobotTable' object has no attribute 'clear_history_button'
+
+2025-10-20 10:25:49,617 - ERROR - Traceback (most recent call last):
+  File "/home/artsiom/MY/Robot_otk_app/main.py", line 48, in main
+    window = RobotTable(service=service)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 61, in __init__
+    self.set_logic(RobotLogic(self, service))
+  File "/home/artsiom/MY/Robot_otk_app/ui.py", line 77, in set_logic
+    self.clear_history_button.clicked.connect(self.logic.clear_history)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RobotTable' object has no attribute 'clear_history_button'
+

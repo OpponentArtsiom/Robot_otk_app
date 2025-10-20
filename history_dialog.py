@@ -1,3 +1,4 @@
+# history_dialog.py
 import json
 import os
 from PyQt5.QtWidgets import (
@@ -5,7 +6,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView,
     QInputDialog, QLineEdit, QMessageBox
 )
-from db import get_history, clear_history
+from PyQt5.QtCore import Qt
 
 FIELD_LABELS = {
     "model": "Модель",
@@ -21,91 +22,123 @@ FIELD_LABELS = {
 }
 
 
-def load_config():
-    config_path = os.path.join(os.path.dirname(__file__), "config.json")
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
 class HistoryDialog(QDialog):
-    def __init__(self, robot_id=None, parent=None):
+    """Диалог для просмотра и очистки истории изменений роботов."""
+
+    def __init__(self, service, robot_id=None, parent=None):
+        """
+        :param service: экземпляр RobotService
+        :param robot_id: ID конкретного робота (или None — показать всю историю)
+        :param parent: родительский виджет
+        """
         super().__init__(parent)
+        self._service = service
+        self._robot_id = robot_id
+        self._config = self._load_config()
+
         self.setWindowTitle("История изменений")
         self.resize(1000, 500)
 
-        self.robot_id = robot_id
-        self.config = load_config()
+        self._setup_ui()
+        self._load_history()
 
-        # таблица
-        self.table = QTableWidget()
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+    # =================== Приватные методы ===================
 
-        # кнопка очистки
-        self.clear_button = QPushButton("🧹 Очистить историю")
-        self.clear_button.clicked.connect(self.handle_clear)
+    def _load_config(self):
+        """Загружает конфигурацию из config.json."""
+        config_path = os.path.join(os.path.dirname(__file__), "config.json")
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
 
-        # компоновка
+    def _setup_ui(self):
+        """Создание виджетов и компоновки."""
+        # Таблица
+        self._table = QTableWidget()
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        # Кнопка очистки
+        self._clear_button = QPushButton("🧹 Очистить историю")
+        self._clear_button.clicked.connect(self._on_clear_clicked)
+
+        # Компоновка кнопки
         button_layout = QHBoxLayout()
         button_layout.addStretch()
-        button_layout.addWidget(self.clear_button)
+        button_layout.addWidget(self._clear_button)
 
+        # Главная компоновка
         layout = QVBoxLayout()
-        layout.addWidget(self.table)
+        layout.addWidget(self._table)
         layout.addLayout(button_layout)
         self.setLayout(layout)
 
-        self.load_history()
-
-    def load_history(self):
-        history = get_history(self.robot_id)
+    def _load_history(self):
+        """Загрузка истории из сервиса и отображение в таблице."""
+        history = self._service.get_history(self._robot_id)
         headers = ["ID", "Серийный номер", "Действие", "Поле",
                    "Старое значение", "Новое значение", "Время"]
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
-        self.table.setRowCount(len(history))
 
-        for row_idx, row in enumerate(history):
+        self._table.setColumnCount(len(headers))
+        self._table.setHorizontalHeaderLabels(headers)
+        self._table.setRowCount(len(history))
+
+        for row_idx, record in enumerate(history):
             for col_idx, key in enumerate(
                 ["id", "robot_sn", "action", "field", "old_value", "new_value", "timestamp"]
             ):
-                value = row.get(key, "")
+                value = record.get(key, "")
                 if key == "field":
                     value = FIELD_LABELS.get(value, value)
                 elif key == "timestamp" and value:
-                    try:
-                        value = value.strftime("%Y-%m-%d %H:%M")
-                    except Exception:
-                        pass
-                self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
+                    value = self._format_timestamp(value)
+                self._table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
 
-    def handle_clear(self):
-        # Запрашиваем пароль
-        password, ok = QInputDialog.getText(
-            self, "Пароль", "Введите пароль для очистки истории:",
-            QLineEdit.Password
-        )
-        if not ok:
+    def _format_timestamp(self, ts):
+        """Форматирование времени в строку."""
+        try:
+            return ts.strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            return str(ts)
+
+    def _on_clear_clicked(self):
+        """Обработка нажатия кнопки очистки истории."""
+        if not self._verify_password():
             return
 
-        expected = self.config.get("history_clear_password")
-        if not expected:
-            QMessageBox.critical(self, "Ошибка", "Пароль не задан в config.json")
-            return
-
-        if password != expected:
-            QMessageBox.warning(self, "Ошибка", "Неверный пароль!")
-            return
-
-        # Если пароль верный — подтверждаем
         reply = QMessageBox.question(
             self, "Подтверждение",
             "Вы уверены, что хотите очистить всю историю?",
             QMessageBox.Yes | QMessageBox.No
         )
         if reply == QMessageBox.Yes:
-            clear_history()
-            self.load_history()
+            self._service.clear_history()
+            self._load_history()
             QMessageBox.information(self, "История", "🧹 История успешно очищена.")
+
+    def _verify_password(self):
+        """Запрос пароля и проверка соответствия конфигурации."""
+        password, ok = QInputDialog.getText(
+            self, "Пароль", "Введите пароль для очистки истории:",
+            QLineEdit.Password
+        )
+        if not ok:
+            return False
+
+        expected = self._config.get("history_clear_password")
+        if not expected:
+            QMessageBox.critical(self, "Ошибка", "Пароль не задан в config.json")
+            return False
+
+        if password != expected:
+            QMessageBox.warning(self, "Ошибка", "Неверный пароль!")
+            return False
+
+        return True
+
+    # =================== Публичные методы ===================
+
+    def refresh(self):
+        """Обновляет таблицу истории (публичный метод для вызова извне)."""
+        self._load_history()

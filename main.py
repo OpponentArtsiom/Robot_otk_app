@@ -1,10 +1,15 @@
+# main.py
 import sys
 import traceback
 import logging
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import Qt
-from db import init_db
+
+# ✅ Импортируем новые классы
+from db import Database, RobotRepository, HistoryRepository, DB_DEFAULT
+from services import RobotService
 from ui import RobotTable
+
 
 # 📄 Настройка логгирования в файл
 logging.basicConfig(
@@ -13,7 +18,8 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-def show_error_dialog(error_message):
+
+def show_error_dialog(error_message: str):
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Critical)
     msg_box.setWindowTitle("Ошибка")
@@ -21,31 +27,36 @@ def show_error_dialog(error_message):
     msg_box.setDetailedText(error_message)
     msg_box.exec_()
 
+
 def main():
     try:
-        init_db()  # Инициализация БД
-        app = QApplication(sys.argv)
+        # --- 🗄️ Настройка базы данных и сервисов ---
+        db = Database(DB_DEFAULT)
+        robot_repo = RobotRepository(db)
+        history_repo = HistoryRepository(db)
+        service = RobotService(robot_repo, history_repo)
 
+        # Создание таблиц (если не существуют)
+        service.init_db()
+
+        # --- 🚀 Запуск приложения ---
+        app = QApplication(sys.argv)
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-        
 
-
-        window = RobotTable()
+        # Создание основного окна и передача сервиса
+        window = RobotTable(service=service)
         window.showMaximized()
 
         sys.exit(app.exec_())
 
-    except Exception as e:
-        # 🐞 Сохраняем трейсбек и лог
+    except Exception:
+        # 🐞 Логирование и показ ошибки пользователю
         error_message = traceback.format_exc()
         logging.error(error_message)
-
-        # 🔔 Показываем пользователю
         show_error_dialog(error_message)
-
-        # 💥 Завершаем принудительно
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
