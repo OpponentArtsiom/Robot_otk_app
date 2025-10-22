@@ -10,7 +10,7 @@ config.json
 pyrightconfig.json
 
 #Отчеты
-.xlsx
+*.xlsx
 
 # Виртуальные окружения
 venv/
