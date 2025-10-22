@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#Файлы только для Linux
+run.sh
+error.log
+config.json
+
 # Виртуальные окружения
 venv/
 .env/
