@@ -1,7 +1,0 @@
-{
-  "venvPath": "/home/artsiom/MY/Robot_otk_app",
-  "venv": "venv",
-  "pythonVersion": "3.11",
-  "reportMissingImports": true,
-  "reportMissingTypeStubs": false
-}
