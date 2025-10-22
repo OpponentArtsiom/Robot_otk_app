@@ -9,6 +9,9 @@ error.log
 config.json
 pyrightconfig.json
 
+#Отчеты
+.xlsx
+
 # Виртуальные окружения
 venv/
 .env/
