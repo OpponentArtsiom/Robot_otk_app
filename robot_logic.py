@@ -137,20 +137,34 @@ class RobotLogic:
                         if cell:
                             cell.setBackground(QColor(200, 200, 200))
 
-    def filter_table(self):
-        """Фильтрация строк таблицы по вводу в поле поиска."""
-        try:
-            query = self.ui.search_input.text().lower()
-        except Exception:
-            query = ""
+        self.apply_filters()
+
+    def apply_filters(self):
+        """Фильтрация по поиску + скрытие отгруженных"""
+        query = self.ui.search_input.text().lower()
+        hide_shipped = self.ui.hide_shipped_checkbox.isChecked()
+
+        status_col = self.db_fields.index("status")
+
         for row in range(self.ui.table.rowCount()):
-            match = False
-            for col in range(self.ui.table.columnCount()):
-                item = self.ui.table.item(row, col)
-                if item and query in item.text().lower():
-                    match = True
-                    break
-            self.ui.table.setRowHidden(row, not match)
+            visible = True
+
+            # 🔍 Поиск
+            if query:
+                visible = False
+                for col in range(self.ui.table.columnCount()):
+                    item = self.ui.table.item(row, col)
+                    if item and query in item.text().lower():
+                        visible = True
+                        break
+
+            # 🚚 Скрытие отгруженных
+            if hide_shipped:
+                status_item = self.ui.table.item(row, status_col)
+                if status_item and status_item.text() == "Отгружен":
+                    visible = False
+
+            self.ui.table.setRowHidden(row, not visible)
 
     def add_robot(self):
         """Открывает диалог добавления робота и добавляет через сервис."""

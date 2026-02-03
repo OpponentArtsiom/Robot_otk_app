@@ -1,6 +1,7 @@
 # ui.py
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QTableWidget, QPushButton
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QTableWidget, QPushButton, QCheckBox
 )
 from robot_logic import RobotLogic
 
@@ -29,6 +30,12 @@ class RobotTable(QWidget):
         search_layout.addStretch()
         search_layout.addWidget(self.search_label)
         search_layout.addWidget(self.search_input)
+
+        # ☑️ Чекбокс скрытия отгруженных
+        self.hide_shipped_checkbox = QCheckBox("Скрыть отгруженные")
+        self.hide_shipped_checkbox.setChecked(False)
+
+        search_layout.addWidget(self.hide_shipped_checkbox)
 
         # 🔘 Кнопки
         self.add_button = QPushButton("➕ Добавить робота")
@@ -61,18 +68,16 @@ class RobotTable(QWidget):
             self.set_logic(RobotLogic(self, service))
 
     def set_logic(self, logic):
-        """
-        Привязывает экземпляр RobotLogic к UI и подключает все сигналы.
-        """
         self.logic = logic
-        # Подключаем поиск
-        self.search_input.textChanged.connect(self.logic.filter_table)
-        # Кнопки
+
+        self.search_input.textChanged.connect(self.logic.apply_filters)
+        self.hide_shipped_checkbox.stateChanged.connect(self.logic.apply_filters)
+
         self.add_button.clicked.connect(self.logic.add_robot)
         self.edit_button.clicked.connect(self.logic.edit_robot)
         self.delete_button.clicked.connect(self.logic.delete_robot)
         self.save_button.clicked.connect(self.logic.save_changes)
         self.export_button.clicked.connect(self.logic.export_to_excel)
         self.history_button.clicked.connect(self.logic.show_history)
-        # Загрузка данных при старте
+
         self.logic.load_data()

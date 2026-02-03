@@ -7,8 +7,8 @@ from contextlib import contextmanager
 DB_DEFAULT = {
     "dbname": "robots_db",
     "user": "postgres",
-    "password": "123",
-    "host": "192.168.1.9",
+    "password": "admin112",
+    "host": "192.168.1.29",
     "port": 5432,
 }
 
