@@ -38,15 +38,15 @@ class RobotRepository:
                         id SERIAL PRIMARY KEY,
                         model TEXT,
                         robot_sn TEXT,
-                        controller_sn TEXT,
-                        arrival_date DATE NOT NULL, 
+                        controller_sn TEXT, 
                         status TEXT,
                         fault_description TEXT,
                         fault_reason TEXT,
                         tasks_done TEXT,
                         tasks_required TEXT,
                         required_parts TEXT,
-                        notes TEXT
+                        notes TEXT,
+                        arrival_date DATE
                     )
                 """)
                 cursor.execute("""
@@ -74,9 +74,9 @@ class RobotRepository:
                 cursor.execute(
                     """
                     INSERT INTO robots (
-                        model, robot_sn, controller_sn,arrival_date, status, fault_description,
+                        model, robot_sn, controller_sn, arrival_date, status, fault_description,
                         fault_reason, tasks_done, tasks_required, required_parts, notes
-                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     RETURNING id
                     """,
                     (
