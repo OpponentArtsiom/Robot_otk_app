@@ -105,7 +105,10 @@ class RobotRepository:
         else:
             new_value = str(new_value)
 
-        sql = f"UPDATE robots SET {field} = %s WHERE id = %s"
+        if field == "arrival_date":
+            sql = f"UPDATE robots SET {field} = TO_DATE(%s, 'DD.MM.YYYY') WHERE id = %s"
+        else:
+            sql = f"UPDATE robots SET {field} = %s WHERE id = %s"
 
         with self.db.connect() as conn:
             with conn.cursor() as cursor:
