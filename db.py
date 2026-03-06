@@ -39,6 +39,7 @@ class RobotRepository:
                         model TEXT,
                         robot_sn TEXT,
                         controller_sn TEXT,
+                        arrival_date DATE NOT NULL, 
                         status TEXT,
                         fault_description TEXT,
                         fault_reason TEXT,
@@ -73,13 +74,13 @@ class RobotRepository:
                 cursor.execute(
                     """
                     INSERT INTO robots (
-                        model, robot_sn, controller_sn, status, fault_description,
+                        model, robot_sn, controller_sn,arrival_date, status, fault_description,
                         fault_reason, tasks_done, tasks_required, required_parts, notes
                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     RETURNING id
                     """,
                     (
-                        data.get("model"), data.get("robot_sn"), data.get("controller_sn"),
+                        data.get("model"), data.get("robot_sn"), data.get("controller_sn"),data.get("arrival_date"),
                         data.get("status"), data.get("fault_description"), data.get("fault_reason"),
                         data.get("tasks_done"), data.get("tasks_required"),
                         data.get("required_parts"), data.get("notes"),
@@ -91,7 +92,7 @@ class RobotRepository:
 
     def update(self, robot_id: int, field: str, new_value: Any):
         allowed_fields = {
-            "model", "robot_sn", "controller_sn", "status",
+            "model", "robot_sn", "controller_sn","arrival_date", "status",
             "fault_description", "fault_reason",
             "tasks_done", "tasks_required", "required_parts", "notes"
         }

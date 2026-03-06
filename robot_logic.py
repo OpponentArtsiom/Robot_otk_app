@@ -5,7 +5,7 @@ from PyQt5.QtGui import QColor
 from openpyxl import Workbook
 from robot_dialog import RobotDialog
 from history_dialog import HistoryDialog
-
+from datetime import datetime, timedelta
 
 class RobotLogic:
     def __init__(self, ui, service):
@@ -17,13 +17,13 @@ class RobotLogic:
         self.service = service
 
         self.headers = [
-            "Модель", "Серийный № робота", "Серийный № контроллера", "Текущий статус",
+            "Модель", "Серийный № робота", "Серийный № контроллера","Дата поступления", "Текущий статус",
             "Описание неисправности", "Причина поломки", "Проведенные работы",
             "Планируемые работы", "Необходимые запчасти", "Примечания"
         ]
 
         self.db_fields = [
-            "model", "robot_sn", "controller_sn", "status",
+            "model", "robot_sn", "controller_sn","arrival_date", "status",
             "fault_description", "fault_reason", "tasks_done",
             "tasks_required", "required_parts", "notes"
         ]
@@ -72,10 +72,20 @@ class RobotLogic:
 
 
     def create_table_item(self, value, field=None):
-        """Создаёт QTableWidgetItem с правильными флагами и раскраской по статусу."""
+        """Создаёт QTableWidgetItem с правильными флагами и раскраской по статусу.
+        Добавляет конвертацию даты к нужному формату"""
+        if field == "arrival_date" and value:
+                if isinstance(value, str):
+                    # если из базы пришла строка 'YYYY-MM-DD'
+                    parts = value.split("-")
+                    if len(parts) == 3:
+                        value = f"{parts[2]}.{parts[1]}.{parts[0]}"  # ДД.ММ.ГГГГ
+                elif hasattr(value, "strftime"):
+                    # если пришёл объект datetime.date или datetime.datetime
+                    value = value.strftime("%d.%m.%Y")  # ДД.ММ.ГГГГ
+
         item = QTableWidgetItem(str(value))
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-
         if field == "status":
             color_map = {
                 "Необходим ремонт": QColor("#ffcccc"),

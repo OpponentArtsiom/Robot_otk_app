@@ -8,6 +8,7 @@ class Robot:
     model: str = ""
     robot_sn: str = ""
     controller_sn: str = ""
+    arrival_date: str = ""
     status: str = ""
     fault_description: str = ""
     fault_reason: str = ""
@@ -23,6 +24,7 @@ class Robot:
             "model": self.model,
             "robot_sn": self.robot_sn,
             "controller_sn": self.controller_sn,
+            "arrival_date": self.arrival_date,
             "status": self.status,
             "fault_description": self.fault_description,
             "fault_reason": self.fault_reason,
@@ -41,6 +43,7 @@ class Robot:
             model=row.get("model", ""),
             robot_sn=row.get("robot_sn", ""),
             controller_sn=row.get("controller_sn", ""),
+            arrival_date=row.get("arrival_date", ""),
             status=row.get("status", ""),
             fault_description=row.get("fault_description", ""),
             fault_reason=row.get("fault_reason", ""),
