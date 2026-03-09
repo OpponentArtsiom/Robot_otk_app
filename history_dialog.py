@@ -1,6 +1,8 @@
 # history_dialog.py
 import json
 import os
+from time import strftime
+
 from PyQt5.QtWidgets import (
     QDialog, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView,
@@ -92,16 +94,11 @@ class HistoryDialog(QDialog):
                 value = record.get(key, "")
                 if key == "field":
                     value = FIELD_LABELS.get(value, value)
+                # elif key == "old_value":
+                #     value = self._format_old_data_value(value)
                 elif key == "timestamp" and value:
                     value = self._format_timestamp(value)
                 self._table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
-
-    def _format_timestamp(self, ts):
-        """Форматирование времени в строку."""
-        try:
-            return ts.strftime("%Y-%m-%d %H:%M")
-        except Exception:
-            return str(ts)
 
     def _on_clear_clicked(self):
         """Обработка нажатия кнопки очистки истории."""
@@ -137,6 +134,31 @@ class HistoryDialog(QDialog):
             return False
 
         return True
+
+    # ============== Приватные статические методы ============
+
+    @staticmethod
+    def _format_timestamp(ts):
+        """
+        Форматирование времени изменения поля БД в строку.
+        Проверяет объект на наличие метода "strftime" класса datetime. При его
+        наличии форматирует объект к виду "%d.%m.%Y %H:%M". Иначе выводит строковой представление объекта
+        """
+        if hasattr(ts, "strftime"):
+            return ts.strftime("%d.%m.%Y %H:%M")
+        else:
+            return str(ts)
+
+    @staticmethod
+    def _format_old_data_value(old_data):
+        """
+        Форматирование времени к виду "%d.%m.%Y".
+        Проверяет является ли поданный объект представлением времени в текстовом формате и виде "%Y-%m-%d" или
+        объектом класса datetime. После чего преобразует объект к виду "%d.%m.%Y" и формату str
+        """
+        if hasattr(old_data, "strftime"):
+            return old_data.strftime("%d.%m.%Y %H:%M")
+
 
     # =================== Публичные методы ===================
 
