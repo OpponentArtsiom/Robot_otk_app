@@ -2,6 +2,7 @@
 import json
 import os
 import re
+from typing import Any
 
 from PyQt5.QtWidgets import (
     QDialog, QTableWidget, QTableWidgetItem,
@@ -98,8 +99,8 @@ class HistoryDialog(QDialog):
                 value = record.get(key, "")
                 if key == "field":
                     value = FIELD_LABELS.get(value, value)
-                elif key == "old_value":
-                    value = self._format_old_data_value(value)
+                elif key == "old_value" or key == "new_value":
+                    value = self._format_data_value(value)
                 elif key == "timestamp" and value:
                     value = self._format_timestamp(value)
                 self._table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
@@ -139,26 +140,26 @@ class HistoryDialog(QDialog):
 
         return True
 
-    def _format_old_data_value(self, old_data):
+    def _format_data_value(self, data:Any) -> str:
         """
         Форматирование времени к виду "%d.%m.%Y".
         Проверяет является ли поданный объект представлением времени в текстовом формате и виде "%Y-%m-%d" или
         объектом класса datetime. После чего преобразует объект к виду "%d.%m.%Y" и формату str. Так же пере-
         писывает поля со значением "None" на "Не известно"
         """
-        if old_data is None:
+        if data is None:
             return "Не известно"
-        elif hasattr(old_data, "strftime"):
-            return old_data.strftime("%d.%m.%Y")
-        elif self.__REGEX_DATA.fullmatch(old_data):
-            return self.__REGEX_DATA.sub(r'\3.\2.\1', old_data)
+        elif hasattr(data, "strftime"):
+            return data.strftime("%d.%m.%Y")
+        elif self.__REGEX_DATA.fullmatch(data):
+            return self.__REGEX_DATA.sub(r'\3.\2.\1', data)
         else:
-            return old_data
+            return str(data)
 
     # ============== Приватные статические методы ============
 
     @staticmethod
-    def _format_timestamp(ts):
+    def _format_timestamp(ts:Any) -> str:
         """
         Форматирование времени изменения поля БД в строку.
         Проверяет объект на наличие метода "strftime" класса datetime. При его
