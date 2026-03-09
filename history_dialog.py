@@ -12,6 +12,7 @@ FIELD_LABELS = {
     "model": "Модель",
     "robot_sn": "Серийный номер робота",
     "controller_sn": "Серийный номер контроллера",
+    "arrival_date": "Дата поступления",
     "status": "Статус",
     "fault_description": "Описание неисправности",
     "fault_reason": "Причина неисправности",
