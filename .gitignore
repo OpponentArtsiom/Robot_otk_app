@@ -6,7 +6,6 @@ __pycache__/
 #Файлы только для Linux
 run.sh
 error.log
-config.json
 pyrightconfig.json
 
 #Отчеты

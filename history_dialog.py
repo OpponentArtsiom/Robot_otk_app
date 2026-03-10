@@ -45,7 +45,7 @@ class HistoryDialog(QDialog):
         self._config = self._load_config()
 
         self.setWindowTitle("История изменений")
-        self.resize(1000, 500)
+        self.resize(1200, 500)
 
         self._setup_ui()
         self._load_history()
@@ -65,7 +65,6 @@ class HistoryDialog(QDialog):
         """Создание виджетов и компоновки."""
         # Таблица
         self._table = QTableWidget()
-        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # Кнопка очистки
         self._clear_button = QPushButton("🧹 Очистить историю")
@@ -92,6 +91,9 @@ class HistoryDialog(QDialog):
         self._table.setHorizontalHeaderLabels(headers)
         self._table.setRowCount(len(history))
 
+        for header_idx, header in enumerate(headers):
+            self._table.setColumnWidth(header_idx, (15 * len(header)) + 70 * (2 < len(header) < 6))
+
         for row_idx, record in enumerate(history):
             for col_idx, key in enumerate(
                 ["id", "robot_sn", "action", "field", "old_value", "new_value", "timestamp"]
@@ -104,6 +106,8 @@ class HistoryDialog(QDialog):
                 elif key == "timestamp" and value:
                     value = self._format_timestamp(value)
                 self._table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
+
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
 
     def _on_clear_clicked(self):
         """Обработка нажатия кнопки очистки истории."""
