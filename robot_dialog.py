@@ -47,12 +47,7 @@ class RobotDialog(QDialog):
                 widget.setDisplayFormat("dd.MM.yy")
                 widget.setCalendarPopup(True)
                 if value:
-                    try:
-                        # если в базе YYYY-MM-DD
-                        dt = QDate.fromString(value, "yyyy-MM-dd")
-                        widget.setDate(dt)
-                    except Exception:
-                        widget.setDate(QDate.currentDate())
+                    widget.setDate(value)
                 else:
                     widget.setDate(QDate.currentDate())
             elif extra and isinstance(extra[0], list):
