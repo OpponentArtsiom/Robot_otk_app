@@ -73,8 +73,8 @@ class RobotLogic:
             self.load_data()  # или self.show_history()
             QMessageBox.information(self.ui, "История", "🧹 История успешно очищена.")
 
-
-    def create_table_item(self, value, field=None):
+    @staticmethod
+    def create_table_item(value, field=None):
         """Создаёт QTableWidgetItem с правильными флагами и раскраской по статусу.
         Добавляет конвертацию даты к нужному формату"""
         if field == "arrival_date" and value:
