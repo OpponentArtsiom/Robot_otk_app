@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Optional, List, Dict, Any
 from contextlib import contextmanager
+from datetime import datetime
 
 
 DB_DEFAULT = {
@@ -80,7 +81,7 @@ class RobotRepository:
                     RETURNING id
                     """,
                     (
-                        data.get("model"), data.get("robot_sn"), data.get("controller_sn"),data.get("arrival_date"),
+                        data.get("model"), data.get("robot_sn"), data.get("controller_sn"),datetime.strptime(data.get("arrival_date"), '%d.%m.%Y'),
                         data.get("status"), data.get("fault_description"), data.get("fault_reason"),
                         data.get("tasks_done"), data.get("tasks_required"),
                         data.get("required_parts"), data.get("notes"),
