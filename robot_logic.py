@@ -1,11 +1,14 @@
 # robot_logic.py
-from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QDialog, QInputDialog, QLineEdit
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QDialog, QInputDialog, QLineEdit, QFileDialog
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
-from openpyxl import Workbook
 from robot_dialog import RobotDialog
 from history_dialog import HistoryDialog
-from datetime import datetime, timedelta
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+from datetime import datetime
+
 
 class RobotLogic:
     def __init__(self, ui, service):
@@ -236,12 +239,6 @@ class RobotLogic:
 
     def export_to_excel(self):
         """Экспорт таблицы роботов в Excel с форматированием и выбором пути сохранения."""
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-        from openpyxl.utils import get_column_letter
-        from PyQt5.QtWidgets import QFileDialog, QMessageBox
-        from datetime import datetime
-
         # Получаем данные
         robots = self.service.get_all_robots() or []
         if not robots:
