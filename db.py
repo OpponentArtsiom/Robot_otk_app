@@ -171,7 +171,7 @@ class HistoryRepository:
                     )
                 return cursor.fetchall()
 
-    def clear_history(self):
+    def clear_db_history(self):
         with self.db.connect() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("TRUNCATE history RESTART IDENTITY")

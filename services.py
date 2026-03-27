@@ -1,7 +1,5 @@
 from typing import List, Dict, Any, Optional
-from models import Robot
 from db import RobotRepository, HistoryRepository, Database
-
 
 class RobotService:
     def __init__(self, robot_repo: RobotRepository, history_repo: HistoryRepository):
@@ -44,4 +42,6 @@ class RobotService:
         return self.history_repo.get_history(robot_id)
 
     def clear_history(self):
-        self.history_repo.clear_history()
+        self.history_repo.clear_db_history()
+
+

@@ -3,7 +3,7 @@ import json
 import os
 import re
 from typing import Any
-
+from hashlib import sha256
 from PyQt5.QtWidgets import (
     QDialog, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView,
@@ -134,11 +134,12 @@ class HistoryDialog(QDialog):
             return False
 
         expected = self._config.get("history_clear_password")
+
         if not expected:
             QMessageBox.critical(self, "Ошибка", "Пароль не задан в config.json")
             return False
 
-        if password != expected:
+        if sha256(password.encode()).hexdigest() != expected:
             QMessageBox.warning(self, "Ошибка", "Неверный пароль!")
             return False
 

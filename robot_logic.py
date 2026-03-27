@@ -44,35 +44,6 @@ class RobotLogic:
         dialog = HistoryDialog(service=self.service, parent=self.ui)
         dialog.exec_()
 
-    def clear_history(self):
-        """Очистка всей истории через сервис с подтверждением пароля."""
-        from PyQt5.QtWidgets import QInputDialog, QLineEdit
-
-        password, ok = QInputDialog.getText(
-            self.ui, "Пароль", "Введите пароль для очистки истории:", QLineEdit.Password
-        )
-        if not ok:
-            return
-
-        expected = self.service.get_history_clear_password()  # или self.service.config.get("history_clear_password")
-        if expected is None:
-            QMessageBox.critical(self.ui, "Ошибка", "Пароль не задан в config.json")
-            return
-
-        if password != expected:
-            QMessageBox.warning(self.ui, "Ошибка", "Неверный пароль!")
-            return
-
-        reply = QMessageBox.question(
-            self.ui, "Подтверждение",
-            "Вы уверены, что хотите очистить всю историю?",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if reply == QMessageBox.Yes:
-            self.service.clear_history()
-            self.load_data()  # или self.show_history()
-            QMessageBox.information(self.ui, "История", "🧹 История успешно очищена.")
-
     @staticmethod
     def create_table_item(value, field=None):
         """Создаёт QTableWidgetItem с правильными флагами и раскраской по статусу.
