@@ -30,12 +30,12 @@ class RobotLogic:
             "fault_description", "fault_reason", "tasks_done",
             "tasks_required", "required_parts", "notes"
         ]
-
+        self.timer = QTimer()
         self.start_auto_refresh()
+
 
     def start_auto_refresh(self):
         """Автообновление таблицы каждую минуту."""
-        self.timer = QTimer()
         self.timer.timeout.connect(self.load_data)
         self.timer.start(60000)  # 60 секунд
 
