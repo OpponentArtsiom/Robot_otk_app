@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import Qt
 
 # ✅ Импортируем новые классы
-from db import Database, RobotRepository, HistoryRepository, DB_DEFAULT
+from db import Database, RobotRepository, HistoryRepository
 from services import RobotService
 from ui import RobotTable
 
@@ -31,7 +31,7 @@ def show_error_dialog(error_message: str):
 def main():
     try:
         # --- 🗄️ Настройка базы данных и сервисов ---
-        db = Database(DB_DEFAULT)
+        db = Database()
         robot_repo = RobotRepository(db)
         history_repo = HistoryRepository(db)
         service = RobotService(robot_repo, history_repo)

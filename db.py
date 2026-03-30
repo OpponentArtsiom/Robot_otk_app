@@ -1,4 +1,6 @@
 import psycopg2
+import os
+import json
 from psycopg2.extras import RealDictCursor
 from typing import Optional, List, Dict, Any
 from contextlib import contextmanager
@@ -16,7 +18,20 @@ DB_DEFAULT = {
 
 class Database:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        self.config = config or DB_DEFAULT
+        if config:
+            self.config = config
+        else:
+            self.config = self._load_config() or DB_DEFAULT
+
+    @staticmethod
+    def _load_config():
+        """Загружает конфигурацию из config.json."""
+        config_path = os.path.join(os.path.dirname(__file__), "config.json")
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)["db"]
+        except Exception:
+            return {}
 
     @contextmanager
     def connect(self):
