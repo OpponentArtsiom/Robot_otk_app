@@ -42,7 +42,7 @@ class HistoryDialog(QDialog):
         super().__init__(parent)
         self._service = service
         self._robot_id = robot_id
-        self._config = self._load_config()
+        self._password = self._load_password()
 
         self.setWindowTitle("История изменений")
         self.resize(1200, 500)
@@ -51,15 +51,6 @@ class HistoryDialog(QDialog):
         self._load_history()
 
     # =================== Приватные методы ===================
-
-    def _load_config(self):
-        """Загружает конфигурацию из config.json."""
-        config_path = os.path.join(os.path.dirname(__file__), "config.json")
-        try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
 
     def _setup_ui(self):
         """Создание виджетов и компоновки."""
@@ -112,7 +103,7 @@ class HistoryDialog(QDialog):
     def _on_clear_clicked(self):
         """Обработка нажатия кнопки очистки истории."""
         if not self._verify_password():
-            return
+            return None
 
         reply = QMessageBox.question(
             self, "Подтверждение",
@@ -133,13 +124,11 @@ class HistoryDialog(QDialog):
         if not ok:
             return False
 
-        expected = self._config.get("history_clear_password")
-
-        if not expected:
+        if not self._password:
             QMessageBox.critical(self, "Ошибка", "Пароль не задан в config.json")
             return False
 
-        if sha256(password.encode()).hexdigest() != expected:
+        if sha256(password.encode()).hexdigest() != self._password:
             QMessageBox.warning(self, "Ошибка", "Неверный пароль!")
             return False
 
@@ -174,6 +163,16 @@ class HistoryDialog(QDialog):
             return ts.strftime("%d.%m.%Y %H:%M")
         else:
             return str(ts)
+
+    @staticmethod
+    def _load_password():
+        """Загружает пароль для удаления истории из config.json."""
+        config_path = os.path.join(os.path.dirname(__file__), "config.json")
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)["history_clear_password"]
+        except Exception:
+            return None
 
     # =================== Публичные методы ===================
 
