@@ -7,9 +7,8 @@ from hashlib import sha256
 from PyQt5.QtWidgets import (
     QDialog, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView,
-    QInputDialog, QLineEdit, QMessageBox
+    QInputDialog, QLineEdit, QMessageBox, QLabel
 )
-from PyQt5.QtCore import Qt
 
 FIELD_LABELS = {
     "model": "Модель",
@@ -66,8 +65,21 @@ class HistoryDialog(QDialog):
         button_layout.addStretch()
         button_layout.addWidget(self._clear_button)
 
+        # 🔍 Поиск
+        self.search_label = QLabel("Поиск:")
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Введите текст...")
+
+        search_layout = QHBoxLayout()
+        search_layout.addStretch()
+        search_layout.addWidget(self.search_label)
+        search_layout.addWidget(self.search_input)
+
+        self.search_input.textChanged.connect(self._apply_filters)
+
         # Главная компоновка
         layout = QVBoxLayout()
+        layout.addLayout(search_layout)
         layout.addWidget(self._table)
         layout.addLayout(button_layout)
         self.setLayout(layout)
@@ -150,6 +162,25 @@ class HistoryDialog(QDialog):
         else:
             return str(data)
 
+
+    def _apply_filters(self):
+        """Фильтрация по поиску + скрытие отгруженных"""
+        query = self.search_input.text().lower()
+
+        for row in range(self._table.rowCount()):
+            visible = True
+
+            # 🔍 Поиск
+            if query:
+                visible = False
+                for col in range(self._table.columnCount()):
+                    item = self._table.item(row, col)
+                    if item and query in item.text().lower():
+                        visible = True
+                        break
+
+            self._table.setRowHidden(row, not visible)
+
     # ============== Приватные статические методы ============
 
     @staticmethod
@@ -173,7 +204,6 @@ class HistoryDialog(QDialog):
                 return json.load(f)["history_clear_password"]
         except Exception:
             return None
-
     # =================== Публичные методы ===================
 
     def refresh(self):
