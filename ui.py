@@ -1,7 +1,7 @@
 # ui.py
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QTableWidget, QPushButton, QCheckBox
+    QTableWidget, QPushButton, QCheckBox, QComboBox
 )
 from robot_logic import RobotLogic
 
@@ -22,20 +22,24 @@ class RobotTable(QWidget):
         self.logic = None
 
         # 🔍 Поиск
-        self.search_label = QLabel("Поиск:")
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Введите текст...")
-
-        search_layout = QHBoxLayout()
-        search_layout.addStretch()
-        search_layout.addWidget(self.search_label)
-        search_layout.addWidget(self.search_input)
+        self.search_field = QComboBox()
 
         # ☑️ Чекбокс скрытия отгруженных
         self.hide_shipped_checkbox = QCheckBox("Скрыть отгруженные")
         self.hide_shipped_checkbox.setChecked(False)
+        self.hide_not_shipped_checkbox = QCheckBox("Скрыть неотгруженные")
+        self.hide_not_shipped_checkbox.setChecked(False)
 
+        search_layout = QHBoxLayout()
+        search_layout.addStretch()
+        search_layout.addWidget(QLabel("Поле поиска:"))
+        search_layout.addWidget(self.search_field)
+        search_layout.addWidget(QLabel("Поиск:"))
+        search_layout.addWidget(self.search_input)
         search_layout.addWidget(self.hide_shipped_checkbox)
+        search_layout.addWidget(self.hide_not_shipped_checkbox)
 
         # 🔘 Кнопки
         self.add_button = QPushButton("➕ Добавить робота")
@@ -72,6 +76,8 @@ class RobotTable(QWidget):
 
         self.search_input.textChanged.connect(self.logic.apply_filters)
         self.hide_shipped_checkbox.stateChanged.connect(self.logic.apply_filters)
+        self.hide_not_shipped_checkbox.stateChanged.connect(self.logic.apply_filters)
+        self.search_field.currentIndexChanged.connect(self.logic.apply_filters)
 
         self.add_button.clicked.connect(self.logic.add_robot)
         self.edit_button.clicked.connect(self.logic.edit_robot)
@@ -81,3 +87,5 @@ class RobotTable(QWidget):
         self.history_button.clicked.connect(self.logic.show_history)
 
         self.logic.load_data()
+
+        self.search_field.addItems(["Все"] + self.logic.headers)

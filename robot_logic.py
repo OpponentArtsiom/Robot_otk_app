@@ -30,6 +30,10 @@ class RobotLogic:
             "fault_description", "fault_reason", "tasks_done",
             "tasks_required", "required_parts", "notes"
         ]
+
+        self._column_count = 0
+        self._row_count = 0
+
         self.timer = QTimer()
         self.start_auto_refresh()
 
@@ -85,9 +89,12 @@ class RobotLogic:
         robots = self.service.get_all_robots() or []
         robots.sort(key=lambda x: x.get('id', 0))
 
-        self.ui.table.setColumnCount(len(self.headers))
+        self._column_count = len(self.headers)
+        self._row_count = len(robots)
+
+        self.ui.table.setColumnCount(self._column_count)
         self.ui.table.setHorizontalHeaderLabels(self.headers)
-        self.ui.table.setRowCount(len(robots))
+        self.ui.table.setRowCount(self._row_count)
 
         for row_idx, robot in enumerate(robots):
             for col_idx, field in enumerate(self.db_fields):
@@ -127,28 +134,32 @@ class RobotLogic:
         """Фильтрация по поиску + скрытие отгруженных"""
         query = self.ui.search_input.text().lower()
         hide_shipped = self.ui.hide_shipped_checkbox.isChecked()
-
+        hide_not_shipped = self.ui.hide_not_shipped_checkbox.isChecked()
+        index_col = self.ui.search_field.currentIndex() - 1
         status_col = self.db_fields.index("status")
 
-        for row in range(self.ui.table.rowCount()):
-            visible = True
-
-            # 🔍 Поиск
-            if query:
-                visible = False
-                for col in range(self.ui.table.columnCount()):
-                    item = self.ui.table.item(row, col)
-                    if item and query in item.text().lower():
-                        visible = True
-                        break
+        for row in range(self._row_count):
+            hidden = False
 
             # 🚚 Скрытие отгруженных
             if hide_shipped:
-                status_item = self.ui.table.item(row, status_col)
-                if status_item and status_item.text() == "Отгружен":
-                    visible = False
+                hidden = self.ui.table.item(row, status_col).text() == "Отгружен"
 
-            self.ui.table.setRowHidden(row, not visible)
+            # Скрытие неотгруженных
+            if hide_not_shipped:
+                hidden = self.ui.table.item(row, status_col).text() != "Отгружен"
+
+            # 🔍 Поиск
+            if query:
+                if index_col == -1:
+                    hidden = not any(
+                                    query in self.ui.table.item(row, col).text().lower()
+                                    for col in range(self._column_count)
+                                    ) or hidden
+                else:
+                    hidden = query not in self.ui.table.item(row, index_col).text().lower() or hidden
+
+            self.ui.table.setRowHidden(row, hidden)
 
     def add_robot(self):
         """Открывает диалог добавления робота и добавляет через сервис."""
