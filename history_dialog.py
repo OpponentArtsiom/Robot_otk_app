@@ -7,7 +7,7 @@ from hashlib import sha256
 from PyQt5.QtWidgets import (
     QDialog, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QPushButton, QHBoxLayout, QHeaderView,
-    QInputDialog, QLineEdit, QMessageBox, QLabel
+    QInputDialog, QLineEdit, QMessageBox, QLabel, QComboBox
 )
 
 FIELD_LABELS = {
@@ -32,6 +32,8 @@ class HistoryDialog(QDialog):
 
     __REGEX_DATA = re.compile(r"(\d+)-(\d+)-(\d+)")
 
+    __HEADERS = ["ID", "Серийный номер", "Действие", "Поле", "Старое значение", "Новое значение", "Время"]
+
     def __init__(self, service, robot_id=None, parent=None):
         """
         :param service: экземпляр RobotService
@@ -42,6 +44,8 @@ class HistoryDialog(QDialog):
         self._service = service
         self._robot_id = robot_id
         self._password = self._load_password()
+        self._row_count = 0
+        self._column_count = 0
 
         self.setWindowTitle("История изменений")
         self.resize(1200, 500)
@@ -66,16 +70,21 @@ class HistoryDialog(QDialog):
         button_layout.addWidget(self._clear_button)
 
         # 🔍 Поиск
-        self.search_label = QLabel("Поиск:")
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Введите текст...")
+        self.search_field = QComboBox()
+        self.search_field.addItems(["Все"] + self.__HEADERS)
 
         search_layout = QHBoxLayout()
         search_layout.addStretch()
-        search_layout.addWidget(self.search_label)
+        search_layout.addWidget(QLabel("Поле поиска:"))
+        search_layout.addWidget(self.search_field)
+        search_layout.addWidget(QLabel("Поиск:"))
         search_layout.addWidget(self.search_input)
 
-        self.search_input.textChanged.connect(self._apply_filters)
+        # Подключение функции поиска к изменению текста поиска или к изменению поля поиска
+        self.search_input.textChanged.connect(self._searching_on_history)
+        self.search_field.currentIndexChanged.connect(self._searching_on_history)
 
         # Главная компоновка
         layout = QVBoxLayout()
@@ -87,14 +96,15 @@ class HistoryDialog(QDialog):
     def _load_history(self):
         """Загрузка истории из сервиса и отображение в таблице."""
         history = self._service.get_history(self._robot_id)
-        headers = ["ID", "Серийный номер", "Действие", "Поле",
-                   "Старое значение", "Новое значение", "Время"]
 
-        self._table.setColumnCount(len(headers))
-        self._table.setHorizontalHeaderLabels(headers)
-        self._table.setRowCount(len(history))
+        self._row_count = len(history)
+        self._column_count = len(self.__HEADERS)
 
-        for header_idx, header in enumerate(headers):
+        self._table.setColumnCount(self._column_count)
+        self._table.setHorizontalHeaderLabels(self.__HEADERS)
+        self._table.setRowCount(self._row_count)
+
+        for header_idx, header in enumerate(self.__HEADERS):
             self._table.setColumnWidth(header_idx, (15 * len(header)) + 70 * (2 < len(header) < 6))
 
         for row_idx, record in enumerate(history):
@@ -163,23 +173,21 @@ class HistoryDialog(QDialog):
             return str(data)
 
 
-    def _apply_filters(self):
-        """Фильтрация по поиску + скрытие отгруженных"""
+    def _searching_on_history(self):
+        """Поиск введенного текста по истории"""
         query = self.search_input.text().lower()
+        index_col = self.search_field.currentIndex() - 1
 
-        for row in range(self._table.rowCount()):
-            visible = True
-
+        for row in range(self._row_count):
+            hidden = False
             # 🔍 Поиск
             if query:
-                visible = False
-                for col in range(self._table.columnCount()):
-                    item = self._table.item(row, col)
-                    if item and query in item.text().lower():
-                        visible = True
-                        break
+                if index_col == -1:
+                    hidden = not any(query in self._table.item(row, col).text().lower() for col in range(self._column_count))
+                else:
+                    hidden = query not in self._table.item(row, index_col).text().lower()
 
-            self._table.setRowHidden(row, not visible)
+            self._table.setRowHidden(row, hidden)
 
     # ============== Приватные статические методы ============
 
