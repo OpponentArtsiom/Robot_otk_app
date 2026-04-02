@@ -81,10 +81,8 @@ class RobotLogic:
 
     def load_data(self):
         """Загружает данные из БД и заполняет таблицу UI."""
-        try:
-            self.ui.table.blockSignals(True)
-        except Exception:
-            pass
+
+        self.ui.table.blockSignals(True)
 
         robots = self.service.get_all_robots() or []
         robots.sort(key=lambda x: x.get('id', 0))
@@ -102,24 +100,14 @@ class RobotLogic:
                 item = self.create_table_item(value, field)
                 self.ui.table.setItem(row_idx, col_idx, item)
 
-        try:
-            self.ui.table.resizeColumnsToContents()
-            self.ui.table.resizeRowsToContents()
-        except Exception:
-            pass
-
-        try:
-            self.ui.table.blockSignals(False)
-        except Exception:
-            pass
+        self.ui.table.resizeColumnsToContents()
+        self.ui.table.resizeRowsToContents()
+        self.ui.table.blockSignals(False)
 
         # Настройка ширины колонки Статус и затемнение строк "Отгружен"
         if "status" in self.db_fields:
             status_column_index = self.db_fields.index("status")
-            try:
-                self.ui.table.setColumnWidth(status_column_index, 170)
-            except Exception:
-                pass
+            self.ui.table.setColumnWidth(status_column_index, 170)
 
             for row_idx, robot in enumerate(robots):
                 if robot.get("status") == "Отгружен":
@@ -129,6 +117,7 @@ class RobotLogic:
                             cell.setBackground(QColor(200, 200, 200))
 
         self.apply_filters()
+        return None
 
     def check_hidden_shipped_checkbox_state(self):
 
@@ -174,6 +163,7 @@ class RobotLogic:
                     hidden = query not in self.ui.table.item(row, index_col).text().lower() or hidden
 
             self.ui.table.setRowHidden(row, hidden)
+        return None
 
     def add_robot(self):
         """Открывает диалог добавления робота и добавляет через сервис."""
@@ -182,18 +172,19 @@ class RobotLogic:
             data = dialog.get_data()
             self.service.add_robot(data)
             self.load_data()
+        return None
 
     def edit_robot(self):
         """Редактирование выбранной строки через диалог."""
         selected_row = self.ui.table.currentRow()
         if selected_row < 0:
             QMessageBox.warning(self.ui, "Нет выбора", "Выберите строку для редактирования")
-            return
+            return None
 
         robots = self.service.get_all_robots() or []
         if selected_row >= len(robots):
             QMessageBox.warning(self.ui, "Ошибка", "Выбранная строка вне диапазона")
-            return
+            return None
 
         robot = robots[selected_row]
         dialog = RobotDialog(robot_data=robot, parent=self.ui)
@@ -211,11 +202,11 @@ class RobotLogic:
         """Удаляет выбранного робота после подтверждения."""
         selected_row = self.ui.table.currentRow()
         if selected_row < 0:
-            return
+            return None
 
         robots = self.service.get_all_robots() or []
         if selected_row >= len(robots):
-            return
+            return None
 
         robot_id = robots[selected_row].get('id')
         reply = QMessageBox.question(
@@ -230,7 +221,7 @@ class RobotLogic:
         """Подтверждение сохранения всех изменений (для будущей логики редактирования на месте)."""
         reply = QMessageBox.question(self.ui, "Подтверждение", "Сохранить все изменения?", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
-            return
+            return None
         QMessageBox.information(self.ui, "Сохранено", "Изменения сохранены (если были).")
 
     def export_to_excel(self):
@@ -239,7 +230,7 @@ class RobotLogic:
         robots = self.service.get_all_robots() or []
         if not robots:
             QMessageBox.information(self.ui, "Экспорт", "⚠️ Нет данных для экспорта.")
-            return
+            return None
 
         # Диалог выбора пути сохранения
         default_name = f"robots_ОТК_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.xlsx"
@@ -250,7 +241,7 @@ class RobotLogic:
             "Excel Files (*.xlsx)"
         )
         if not file_path:
-            return  # пользователь отменил
+            return None# пользователь отменил
 
         try:
             wb = Workbook()
