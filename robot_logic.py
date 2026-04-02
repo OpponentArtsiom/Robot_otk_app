@@ -130,6 +130,20 @@ class RobotLogic:
 
         self.apply_filters()
 
+    def check_hidden_shipped_checkbox_state(self):
+
+        if self.ui.hide_shipped_checkbox.isChecked():
+            self.ui.hide_not_shipped_checkbox.setChecked(False)
+        self.apply_filters()
+        return None
+
+    def check_hidden_not_shipped_checkbox_state(self):
+
+        if self.ui.hide_not_shipped_checkbox.isChecked():
+            self.ui.hide_shipped_checkbox.setChecked(False)
+        self.apply_filters()
+        return None
+
     def apply_filters(self):
         """Фильтрация по поиску + скрытие отгруженных"""
         query = self.ui.search_input.text().lower()

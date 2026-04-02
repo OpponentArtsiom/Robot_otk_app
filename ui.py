@@ -75,8 +75,8 @@ class RobotTable(QWidget):
         self.logic = logic
 
         self.search_input.textChanged.connect(self.logic.apply_filters)
-        self.hide_shipped_checkbox.stateChanged.connect(self.logic.apply_filters)
-        self.hide_not_shipped_checkbox.stateChanged.connect(self.logic.apply_filters)
+        self.hide_shipped_checkbox.stateChanged.connect(self.logic.check_hidden_shipped_checkbox_state)
+        self.hide_not_shipped_checkbox.stateChanged.connect(self.logic.check_hidden_not_shipped_checkbox_state)
         self.search_field.currentIndexChanged.connect(self.logic.apply_filters)
 
         self.add_button.clicked.connect(self.logic.add_robot)
