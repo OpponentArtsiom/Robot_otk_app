@@ -278,15 +278,18 @@ class RobotLogic:
                 "Отгружен": "FFD9D9D9",
                 "Простаивает": "FFE7E6E6"
             }
-
-            for row_idx, robot in enumerate(robots, start=2):
+            row = 2
+            for row_idx, robot in enumerate(robots, start=0):
+                if self.ui.table.isRowHidden(row_idx):
+                    continue
                 for col_idx, field in enumerate(self.db_fields, start=1):
                     value = robot.get(field, "")
-                    cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                    cell = ws.cell(row=row, column=col_idx, value=value)
                     cell.border = thin_border
                     if field == "status":
                         color = status_colors.get(value, "FFFFFFFF")
                         cell.fill = PatternFill("solid", fgColor=color)
+                row += 1
 
             # === Автоширина ===
             for col_cells in ws.columns:
@@ -323,4 +326,3 @@ class RobotLogic:
                 "Ошибка экспорта",
                 f"❌ Не удалось сохранить файл:\n{e}"
             )
-
