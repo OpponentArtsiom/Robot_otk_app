@@ -1,41 +1,78 @@
-from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QDialog
-from PyQt5.QtCore import Qt
+# robot_logic.py
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QDialog, QInputDialog, QLineEdit, QFileDialog
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
-from openpyxl import Workbook
-
 from robot_dialog import RobotDialog
-from db import get_all_robots, add_robot_with_data, update_robot, delete_robot
+from history_dialog import HistoryDialog
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+from datetime import datetime
 
 
 class RobotLogic:
-    def __init__(self, ui):
+    def __init__(self, ui, service):
+        """
+        ui: экземпляр окна/виджета (например, RobotTable из ui.py)
+        service: экземпляр RobotService (services.RobotService)
+        """
         self.ui = ui
+        self.service = service
 
         self.headers = [
-            "Модель", "Серийный № робота", "Серийный № контроллера",
-            "Текущий статус", "Описание неисправности",
-            "Причина поломки", "Проведенные работы",
+            "Модель", "Серийный № робота", "Серийный № контроллера","Дата поступления", "Текущий статус",
+            "Описание неисправности", "Причина поломки", "Проведенные работы",
             "Планируемые работы", "Необходимые запчасти", "Примечания"
         ]
+
         self.db_fields = [
-            "model", "robot_sn", "controller_sn",
-            "status", "fault_description",
-            "fault_reason", "tasks_done",
+            "model", "robot_sn", "controller_sn","arrival_date", "status",
+            "fault_description", "fault_reason", "tasks_done",
             "tasks_required", "required_parts", "notes"
         ]
 
-    def create_table_item(self, value, field=None):
+        self._column_count = 0
+        self._row_count = 0
+
+        self.timer = QTimer()
+        self.start_auto_refresh()
+
+
+    def start_auto_refresh(self):
+        """Автообновление таблицы каждую минуту."""
+        self.timer.timeout.connect(self.load_data)
+        self.timer.start(60000)  # 60 секунд
+
+    def show_history(self):
+        """Открывает диалог истории."""
+        dialog = HistoryDialog(service=self.service, parent=self.ui)
+        dialog.exec_()
+
+    @staticmethod
+    def create_table_item(value, field=None):
+        """Создаёт QTableWidgetItem с правильными флагами и раскраской по статусу.
+        Добавляет конвертацию даты к нужному формату"""
+        if field == "arrival_date" and value:
+                if isinstance(value, str):
+                    # если из базы пришла строка 'YYYY-MM-DD'
+                    parts = value.split("-")
+                    if len(parts) == 3:
+                        value = f"{parts[2]}.{parts[1]}.{parts[0]}"  # ДД.ММ.ГГГГ
+                elif hasattr(value, "strftime"):
+                    # если пришёл объект datetime.date или datetime.datetime
+                    value = value.strftime("%d.%m.%Y")  # ДД.ММ.ГГГГ
+
         item = QTableWidgetItem(str(value))
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-
         if field == "status":
             color_map = {
                 "Необходим ремонт": QColor("#ffcccc"),
-                "Откалиброван": QColor("#ccffcc"),
+                "Откалиброван": QColor("#8FBC8F"),
                 "Тестируется": QColor("#ffffcc"),
                 "Протестирован": QColor("#ccffff"),
-                "Упакован": QColor("#e0e0e0"),
-                "-": QColor("#ffffff")
+                "Упакован": QColor("#87CEEB"),
+                "Отгружен": QColor("#d0d0d0"),
+                "Простаивает": QColor("#DCDCDC")
             }
             color = color_map.get(value, QColor("#ffffff"))
             item.setBackground(color)
@@ -43,13 +80,19 @@ class RobotLogic:
         return item
 
     def load_data(self):
-        self.ui.table.blockSignals(True)
-        robots = get_all_robots()
-        robots.sort(key=lambda x: x['id'])
+        """Загружает данные из БД и заполняет таблицу UI."""
 
-        self.ui.table.setColumnCount(len(self.headers))
+        self.ui.table.blockSignals(True)
+
+        robots = self.service.get_all_robots() or []
+        robots.sort(key=lambda x: x.get('id', 0))
+
+        self._column_count = len(self.headers)
+        self._row_count = len(robots)
+
+        self.ui.table.setColumnCount(self._column_count)
         self.ui.table.setHorizontalHeaderLabels(self.headers)
-        self.ui.table.setRowCount(len(robots))
+        self.ui.table.setRowCount(self._row_count)
 
         for row_idx, robot in enumerate(robots):
             for col_idx, field in enumerate(self.db_fields):
@@ -61,92 +104,225 @@ class RobotLogic:
         self.ui.table.resizeRowsToContents()
         self.ui.table.blockSignals(False)
 
-        status_column_index = self.db_fields.index("status")
-        self.ui.table.setColumnWidth(status_column_index, 170)
+        # Настройка ширины колонки Статус и затемнение строк "Отгружен"
+        if "status" in self.db_fields:
+            status_column_index = self.db_fields.index("status")
+            self.ui.table.setColumnWidth(status_column_index, 170)
 
-    def filter_table(self):
+            for row_idx, robot in enumerate(robots):
+                if robot.get("status") == "Отгружен":
+                    for col_idx in range(self.ui.table.columnCount()):
+                        cell = self.ui.table.item(row_idx, col_idx)
+                        if cell:
+                            cell.setBackground(QColor(200, 200, 200))
+
+        self.apply_filters()
+        return None
+
+    def check_hidden_shipped_checkbox_state(self):
+
+        if self.ui.hide_shipped_checkbox.isChecked():
+            self.ui.hide_not_shipped_checkbox.setChecked(False)
+        self.apply_filters()
+        return None
+
+    def check_hidden_not_shipped_checkbox_state(self):
+
+        if self.ui.hide_not_shipped_checkbox.isChecked():
+            self.ui.hide_shipped_checkbox.setChecked(False)
+        self.apply_filters()
+        return None
+
+    def apply_filters(self):
+        """Фильтрация по поиску + скрытие отгруженных"""
         query = self.ui.search_input.text().lower()
-        for row in range(self.ui.table.rowCount()):
-            match = False
-            for col in range(self.ui.table.columnCount()):
-                item = self.ui.table.item(row, col)
-                if item and query in item.text().lower():
-                    match = True
-                    break
-            self.ui.table.setRowHidden(row, not match)
+        hide_shipped = self.ui.hide_shipped_checkbox.isChecked()
+        hide_not_shipped = self.ui.hide_not_shipped_checkbox.isChecked()
+        index_col = self.ui.search_field.currentIndex() - 1
+        status_col = self.db_fields.index("status")
+
+        for row in range(self._row_count):
+            hidden = False
+
+            # 🚚 Скрытие отгруженных
+            if hide_shipped:
+                hidden = self.ui.table.item(row, status_col).text() == "Отгружен"
+
+            # Скрытие неотгруженных
+            if hide_not_shipped:
+                hidden = self.ui.table.item(row, status_col).text() != "Отгружен"
+
+            # 🔍 Поиск
+            if query:
+                if index_col == -1:
+                    hidden = not any(
+                                    query in self.ui.table.item(row, col).text().lower()
+                                    for col in range(self._column_count)
+                                    ) or hidden
+                else:
+                    hidden = query not in self.ui.table.item(row, index_col).text().lower() or hidden
+
+            self.ui.table.setRowHidden(row, hidden)
+        return None
 
     def add_robot(self):
+        """Открывает диалог добавления робота и добавляет через сервис."""
         dialog = RobotDialog(parent=self.ui)
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_data()
-            add_robot_with_data(data)
+            self.service.add_robot(data)
             self.load_data()
+        return None
 
     def edit_robot(self):
+        """Редактирование выбранной строки через диалог."""
         selected_row = self.ui.table.currentRow()
         if selected_row < 0:
             QMessageBox.warning(self.ui, "Нет выбора", "Выберите строку для редактирования")
-            return
+            return None
 
-        robots = get_all_robots()
+        robots = self.service.get_all_robots() or []
         if selected_row >= len(robots):
             QMessageBox.warning(self.ui, "Ошибка", "Выбранная строка вне диапазона")
-            return
+            return None
 
         robot = robots[selected_row]
         dialog = RobotDialog(robot_data=robot, parent=self.ui)
-
         if dialog.exec_() == QDialog.Accepted:
             updated_data = dialog.get_data()
-            robot_id = robot['id']
+            robot_id = robot.get('id')
             for field, value in updated_data.items():
-                update_robot(robot_id, field, value)
+                old_value = robot.get(field)
+                if str(old_value or "") != str(value or ""):
+                    self.service.update_robot(robot_id, field, value, old_value)
             self.load_data()
             QMessageBox.information(self.ui, "Готово", "✅ Робот обновлён.")
 
     def delete_robot(self):
+        """Удаляет выбранного робота после подтверждения."""
         selected_row = self.ui.table.currentRow()
         if selected_row < 0:
-            return
-        robots = get_all_robots()
+            return None
+
+        robots = self.service.get_all_robots() or []
         if selected_row >= len(robots):
-            return
-        robot_id = robots[selected_row]['id']
-        reply = QMessageBox.question(self.ui, "Подтверждение удаления",
-                                     f"Удалить робота с ID {robot_id}?",
-                                     QMessageBox.Yes | QMessageBox.No)
+            return None
+
+        robot_id = robots[selected_row].get('id')
+        reply = QMessageBox.question(
+            self.ui, "Подтверждение удаления", f"Удалить робота с ID {robot_id}?",
+            QMessageBox.Yes | QMessageBox.No
+        )
         if reply == QMessageBox.Yes:
-            delete_robot(robot_id)
+            self.service.delete_robot(robot_id)
             self.load_data()
 
     def save_changes(self):
-        reply = QMessageBox.question(self.ui, "Подтверждение",
-                                     "Сохранить все изменения?",
-                                     QMessageBox.Yes | QMessageBox.No)
+        """Подтверждение сохранения всех изменений (для будущей логики редактирования на месте)."""
+        reply = QMessageBox.question(self.ui, "Подтверждение", "Сохранить все изменения?", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
-            return
-
-        robots = get_all_robots()
-        for row in range(self.ui.table.rowCount()):
-            robot_id = robots[row]['id']
-            for col in range(self.ui.table.columnCount()):
-                field = self.db_fields[col]
-                item = self.ui.table.item(row, col)
-                if item:
-                    value = item.text()
-                    update_robot(robot_id, field, value)
-
-        QMessageBox.information(self.ui, "Готово", "✅ Изменения сохранены.")
-        self.load_data()
+            return None
+        QMessageBox.information(self.ui, "Сохранено", "Изменения сохранены (если были).")
 
     def export_to_excel(self):
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Роботы ОТК"
-        ws.append(self.headers)
-        robots = get_all_robots()
-        for robot in robots:
-            row_data = [robot.get(field, "") for field in self.db_fields]
-            ws.append(row_data)
-        wb.save("robots_export.xlsx")
-        print("✅ Данные успешно экспортированы в robots_export.xlsx")
+        """Экспорт таблицы роботов в Excel с форматированием и выбором пути сохранения."""
+        # Получаем данные
+        robots = self.service.get_all_robots() or []
+        if not robots:
+            QMessageBox.information(self.ui, "Экспорт", "⚠️ Нет данных для экспорта.")
+            return None
+
+        # Диалог выбора пути сохранения
+        default_name = f"robots_ОТК_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.xlsx"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.ui,
+            "Сохранить как",
+            default_name,
+            "Excel Files (*.xlsx)"
+        )
+        if not file_path:
+            return None# пользователь отменил
+
+        try:
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Роботы ОТК"
+
+            # === Заголовки ===
+            ws.append(self.headers)
+
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill("solid", fgColor="4F81BD")
+            align_center = Alignment(horizontal="center", vertical="center")
+            thin_border = Border(
+                left=Side(style="thin"),
+                right=Side(style="thin"),
+                top=Side(style="thin"),
+                bottom=Side(style="thin")
+            )
+
+            for col_num, header in enumerate(self.headers, 1):
+                cell = ws.cell(row=1, column=col_num)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = align_center
+                cell.border = thin_border
+
+            # === Данные ===
+            status_colors = {
+                "Необходим ремонт": "FFFFC7CE",
+                "Откалиброван": "FFC6EFCE",
+                "Тестируется": "FFFFF2CC",
+                "Протестирован": "FFCCFFFF",
+                "Упакован": "FF87CEEB",
+                "Отгружен": "FFD9D9D9",
+                "Простаивает": "FFE7E6E6"
+            }
+            row = 2
+            for row_idx, robot in enumerate(robots, start=0):
+                if self.ui.table.isRowHidden(row_idx):
+                    continue
+                for col_idx, field in enumerate(self.db_fields, start=1):
+                    value = robot.get(field, "")
+                    cell = ws.cell(row=row, column=col_idx, value=value)
+                    cell.border = thin_border
+                    if field == "status":
+                        color = status_colors.get(value, "FFFFFFFF")
+                        cell.fill = PatternFill("solid", fgColor=color)
+                row += 1
+
+            # === Автоширина ===
+            for col_cells in ws.columns:
+                col_cells = [c for c in col_cells if c.value is not None]
+                if not col_cells:
+                    continue
+                max_len = max(len(str(c.value)) for c in col_cells)
+                col_letter = get_column_letter(col_cells[0].column)
+                ws.column_dimensions[col_letter].width = max_len + 2
+
+            # === Заморозка и автофильтр ===
+            ws.freeze_panes = "A2"
+            ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
+
+            # === Добавляем дату экспорта ===
+            ws["A{}".format(ws.max_row + 2)] = f"Экспортировано: {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+
+            # === Сохранение ===
+            wb.save(file_path)
+            wb.close()
+
+            QMessageBox.information(self.ui, "Экспорт", f"✅ Данные успешно экспортированы в:\n{file_path}")
+
+        except PermissionError:
+            QMessageBox.warning(
+                self.ui,
+                "Ошибка доступа",
+                "⚠️ Невозможно сохранить файл — возможно, он уже открыт в Excel.\n"
+                "Закройте файл и попробуйте снова."
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self.ui,
+                "Ошибка экспорта",
+                f"❌ Не удалось сохранить файл:\n{e}"
+            )

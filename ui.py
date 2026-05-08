@@ -64,4 +64,3 @@ class RobotTable(QWidget):
         # ⏬ Загрузка данных
         self.logic.load_data()
 
-

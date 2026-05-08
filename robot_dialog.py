@@ -24,7 +24,7 @@ class RobotDialog(QDialog):
         main_layout.addLayout(form_layout)
 
         field_defs = [
-            ("model", "Модель", ["RC3", "RC5", "RC10","RC16", "-"]),
+            ("model", "Модель", ["RC3", "RC5", "RC10", "-"]),
             ("robot_sn", "Серийный № робота"),
             ("controller_sn", "Серийный № контроллера"),
             ("status", "Статус", ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "-"]),

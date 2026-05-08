@@ -1,11 +1,11 @@
 import psycopg2
 
 DB_CONFIG = {
-    "host": "192.168.0.236", # IP ПК с сервером
+    "host": "192.168.0.236",  # IP ПК с сервером
     "port": 5432,
     "dbname": "robots_db",
     "user": "postgres",
-    "password": "admin"
+    "password": "admin",
 }
 
 try:
