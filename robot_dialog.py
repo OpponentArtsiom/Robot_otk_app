@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QComboBox, QPushButton, QPlainTextEdit, QFormLayout
+    QComboBox, QPushButton, QPlainTextEdit, QFormLayout, QDateEdit
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QDate
 
 
 class RobotDialog(QDialog):
@@ -15,7 +15,9 @@ class RobotDialog(QDialog):
         self.robot_data = robot_data or {}
         self.is_edit_mode = bool(robot_data)
 
-        self.setWindowTitle("Редактирование робота" if self.is_edit_mode else "Добавление нового робота")
+        self.setWindowTitle(
+            "Редактирование робота" if self.is_edit_mode else "Добавление нового робота"
+        )
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -24,10 +26,11 @@ class RobotDialog(QDialog):
         main_layout.addLayout(form_layout)
 
         field_defs = [
-            ("model", "Модель", ["RC3", "RC5", "RC10", "-"]),
+            ("model", "Модель", ["RC3", "RC5", "RC10","RC16", "Без робота"]),
             ("robot_sn", "Серийный № робота"),
             ("controller_sn", "Серийный № контроллера"),
-            ("status", "Статус", ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "-"]),
+            ("arrival_date", "Дата поступления"),  # новая дата
+            ("status", "Статус", ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован","Отгружен", "Простаивает"]),
             ("fault_description", "Описание неисправности", "multiline"),
             ("fault_reason", "Причина поломки"),
             ("tasks_done", "Проведенные работы", "multiline"),
@@ -38,7 +41,16 @@ class RobotDialog(QDialog):
 
         for field_id, label_text, *extra in field_defs:
             value = self.robot_data.get(field_id, "")
-            if extra and isinstance(extra[0], list):
+            if field_id == "arrival_date":
+                # QDateEdit с календарём
+                widget = QDateEdit()
+                widget.setDisplayFormat("dd.MM.yy")
+                widget.setCalendarPopup(True)
+                if value:
+                    widget.setDate(value)
+                else:
+                    widget.setDate(QDate.currentDate())
+            elif extra and isinstance(extra[0], list):
                 widget = QComboBox()
                 widget.addItems(extra[0])
                 widget.setCurrentText(value)
@@ -52,6 +64,7 @@ class RobotDialog(QDialog):
             self.fields[field_id] = widget
             form_layout.addRow(QLabel(label_text), widget)
 
+        # кнопки
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         self.save_button = QPushButton("Сохранить")
@@ -72,5 +85,7 @@ class RobotDialog(QDialog):
                 data[key] = widget.currentText()
             elif isinstance(widget, QPlainTextEdit):
                 data[key] = widget.toPlainText().strip()
+            elif key == "arrival_date" and isinstance(widget, QDateEdit):
+                # сохраняем в формате YYYY-MM-DD
+                data[key] = widget.date().toString("dd.MM.yyyy")
         return data
-
