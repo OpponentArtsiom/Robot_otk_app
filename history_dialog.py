@@ -30,7 +30,7 @@ FIELD_LABELS = {
 class HistoryDialog(QDialog):
     """Диалог для просмотра и очистки истории изменений роботов."""
 
-    __REGEX_DATA = re.compile(r"(\d+)-(\d+)-(\d+)")
+    __REGEX_DATA_OLD_VALUE = re.compile(r"(\d{4})-(\d\d)-(\d\d)")
 
     __HEADERS = ["ID", "Серийный номер", "Действие", "Поле", "Старое значение", "Новое значение", "Время"]
 
@@ -163,12 +163,12 @@ class HistoryDialog(QDialog):
         объектом класса datetime. После чего преобразует объект к виду "%d.%m.%Y" и формату str. Так же пере-
         писывает поля со значением "None" на "Не известно"
         """
-        if data is None:
+        if data is None or not data:
             return "Не известно"
         elif hasattr(data, "strftime"):
             return data.strftime("%d.%m.%Y")
-        elif self.__REGEX_DATA.fullmatch(data):
-            return self.__REGEX_DATA.sub(r'\3.\2.\1', data)
+        elif self.__REGEX_DATA_OLD_VALUE.fullmatch(data):
+            return self.__REGEX_DATA_OLD_VALUE.sub(r'\3.\2.\1', data)
         else:
             return str(data)
 
