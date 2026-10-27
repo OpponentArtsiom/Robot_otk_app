@@ -1,8 +1,9 @@
 # ui.py
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QTableWidget, QPushButton, QCheckBox, QComboBox
+    QTableWidget, QPushButton, QCheckBox, QComboBox, QMenu, QAction
 )
+from PyQt5.QtCore import Qt
 from robot_logic import RobotLogic
 
 
@@ -16,7 +17,7 @@ class RobotTable(QWidget):
         self.resize(1000, 400)
 
         # 📊 Таблица
-        self.table = QTableWidget()
+        self.table = TableWithCustomMenu()
 
         # Логика пока None, чтобы задать позже через set_logic
         self.logic = None
@@ -88,4 +89,32 @@ class RobotTable(QWidget):
 
         self.logic.load_data()
 
+        self.table.logic = self.logic.edit_robot_status_context_menu
+
         self.search_field.addItems(["Все"] + self.logic.headers)
+
+
+class TableWithCustomMenu(QTableWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        # Контекстное меню для изменения статуса робота
+        self.customContextMenuRequested.connect(self.show_context_menu)
+        self.logic = None
+
+    def show_context_menu(self, pos):
+        # Контекстное меню
+        menu = QMenu(self)
+        item = self.itemAt(pos)
+        fields = ["Необходим ремонт", "Тестируется", "Протестирован", "Откалиброван", "Упакован", "Отгружен", "Простаивает"]
+
+        # Добавляем действия
+        for field in sorted(fields, key=lambda text: text == item.text(), reverse=True):
+            menu.addAction(QAction(field, self))
+
+        # Показываем меню в глобальных координатах
+        # pos — это координаты внутри таблицы, mapToGlobal переводит их в координаты экрана
+        chosen = menu.exec_(self.mapToGlobal(pos))
+        if chosen and self.logic:
+            self.logic(item.row(), chosen.text())

@@ -203,6 +203,17 @@ class RobotLogic:
             self.load_data()
             QMessageBox.information(self.ui, "Готово", "✅ Робот обновлён.")
 
+    def edit_robot_status_context_menu(self, selected_row, chosen_status):
+        """Редактирование статуса робота через контекстное меню."""
+        _field = 'status'
+        robots = self.service.get_all_robots() or []
+        robot = robots[selected_row]
+        robot_id = robot.get('id')
+        old_status = robot.get(_field)
+        if str(old_status or "") != str(chosen_status or ""):
+            self.service.update_robot(robot_id, _field, chosen_status, old_status)
+        self.load_data()
+
     def delete_robot(self):
         """Удаляет выбранного робота после подтверждения."""
         selected_row = self.ui.table.currentRow()
