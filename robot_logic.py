@@ -49,18 +49,21 @@ class RobotLogic:
         dialog.exec_()
 
     @staticmethod
-    def create_table_item(value, field=None):
+    def convert_datetime_to_string(value):
+        if isinstance(value, str):
+            # если из базы пришла строка 'YYYY-MM-DD'
+            parts = value.split("-")
+            if len(parts) == 3:
+                return f"{parts[2]}.{parts[1]}.{parts[0]}"  # ДД.ММ.ГГГГ
+        elif hasattr(value, "strftime"):
+            # если пришёл объект datetime.date или datetime.datetime
+            return value.strftime("%d.%m.%Y")  # ДД.ММ.ГГГГ
+
+    def create_table_item(self, value, field=None):
         """Создаёт QTableWidgetItem с правильными флагами и раскраской по статусу.
         Добавляет конвертацию даты к нужному формату"""
         if field == "arrival_date" and value:
-                if isinstance(value, str):
-                    # если из базы пришла строка 'YYYY-MM-DD'
-                    parts = value.split("-")
-                    if len(parts) == 3:
-                        value = f"{parts[2]}.{parts[1]}.{parts[0]}"  # ДД.ММ.ГГГГ
-                elif hasattr(value, "strftime"):
-                    # если пришёл объект datetime.date или datetime.datetime
-                    value = value.strftime("%d.%m.%Y")  # ДД.ММ.ГГГГ
+            value = self.convert_datetime_to_string(value)
 
         item = QTableWidgetItem(str(value))
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
@@ -193,6 +196,8 @@ class RobotLogic:
             robot_id = robot.get('id')
             for field, value in updated_data.items():
                 old_value = robot.get(field)
+                if field == 'arrival_date' and old_value:
+                    old_value = self.convert_datetime_to_string(old_value)
                 if str(old_value or "") != str(value or ""):
                     self.service.update_robot(robot_id, field, value, old_value)
             self.load_data()
