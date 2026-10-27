@@ -111,7 +111,11 @@ class TableWithCustomMenu(QTableWidget):
 
         # Добавляем действия
         for field in sorted(fields, key=lambda text: text == item.text(), reverse=True):
-            menu.addAction(QAction(field, self))
+            if field == item.text():
+                field = '✔ ' + field
+                menu.addAction(QAction(field, self))
+            else:
+                menu.addAction(QAction(field, self))
 
         # Показываем меню в глобальных координатах
         # pos — это координаты внутри таблицы, mapToGlobal переводит их в координаты экрана
