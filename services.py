@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from db import RobotRepository, HistoryRepository, Database
+from db import RobotRepository, HistoryRepository
 
 class RobotService:
     def __init__(self, robot_repo: RobotRepository, history_repo: HistoryRepository):
