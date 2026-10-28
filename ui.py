@@ -90,6 +90,7 @@ class RobotTable(QWidget):
         self.logic.load_data()
 
         self.table.logic = self.logic.edit_robot_status_context_menu
+        self.table.cellDoubleClicked.connect(self.logic.edit_robot)
 
         self.search_field.addItems(["Все"] + self.logic.headers)
 
