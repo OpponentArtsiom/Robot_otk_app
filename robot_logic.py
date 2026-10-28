@@ -36,6 +36,7 @@ class RobotLogic:
 
         self.timer = QTimer()
         self.start_auto_refresh()
+        self.robots = None
 
 
     def start_auto_refresh(self):
@@ -87,17 +88,16 @@ class RobotLogic:
 
         self.ui.table.blockSignals(True)
 
-        robots = self.service.get_all_robots() or []
-        robots.sort(key=lambda x: x.get('id', 0))
+        self.robots = self.service.get_all_robots() or []
 
         self._column_count = len(self.headers)
-        self._row_count = len(robots)
+        self._row_count = len(self.robots)
 
         self.ui.table.setColumnCount(self._column_count)
         self.ui.table.setHorizontalHeaderLabels(self.headers)
         self.ui.table.setRowCount(self._row_count)
 
-        for row_idx, robot in enumerate(robots):
+        for row_idx, robot in enumerate(self.robots):
             for col_idx, field in enumerate(self.db_fields):
                 value = robot.get(field, "")
                 item = self.create_table_item(value, field)
@@ -112,7 +112,7 @@ class RobotLogic:
             status_column_index = self.db_fields.index("status")
             self.ui.table.setColumnWidth(status_column_index, 170)
 
-            for row_idx, robot in enumerate(robots):
+            for row_idx, robot in enumerate(self.robots):
                 if robot.get("status") == "Отгружен":
                     for col_idx in range(self.ui.table.columnCount()):
                         cell = self.ui.table.item(row_idx, col_idx)
@@ -184,12 +184,11 @@ class RobotLogic:
             QMessageBox.warning(self.ui, "Нет выбора", "Выберите строку для редактирования")
             return None
 
-        robots = self.service.get_all_robots() or []
-        if selected_row >= len(robots):
+        if selected_row >= len(self.robots):
             QMessageBox.warning(self.ui, "Ошибка", "Выбранная строка вне диапазона")
             return None
 
-        robot = robots[selected_row]
+        robot = self.robots[selected_row]
         dialog = RobotDialog(robot_data=robot, parent=self.ui)
         if dialog.exec_() == QDialog.Accepted:
             updated_data = dialog.get_data()
@@ -206,8 +205,7 @@ class RobotLogic:
     def edit_robot_status_context_menu(self, selected_row, chosen_status):
         """Редактирование статуса робота через контекстное меню."""
         _field = 'status'
-        robots = self.service.get_all_robots() or []
-        robot = robots[selected_row]
+        robot = self.robots[selected_row]
         robot_id = robot.get('id')
         old_status = robot.get(_field)
         if str(old_status or "") != str(chosen_status or ""):
@@ -220,11 +218,10 @@ class RobotLogic:
         if selected_row < 0:
             return None
 
-        robots = self.service.get_all_robots() or []
-        if selected_row >= len(robots):
+        if selected_row >= len(self.robots):
             return None
 
-        robot_id = robots[selected_row].get('id')
+        robot_id = self.robots[selected_row].get('id')
         reply = QMessageBox.question(
             self.ui, "Подтверждение удаления", f"Удалить робота с ID {robot_id}?",
             QMessageBox.Yes | QMessageBox.No
@@ -243,8 +240,8 @@ class RobotLogic:
     def export_to_excel(self):
         """Экспорт таблицы роботов в Excel с форматированием и выбором пути сохранения."""
         # Получаем данные
-        robots = self.service.get_all_robots() or []
-        if not robots:
+
+        if not self.robots:
             QMessageBox.information(self.ui, "Экспорт", "⚠️ Нет данных для экспорта.")
             return None
 
@@ -295,7 +292,7 @@ class RobotLogic:
                 "Простаивает": "FFE7E6E6"
             }
             row = 2
-            for row_idx, robot in enumerate(robots, start=0):
+            for row_idx, robot in enumerate(self.robots, start=0):
                 if self.ui.table.isRowHidden(row_idx):
                     continue
                 for col_idx, field in enumerate(self.db_fields, start=1):
